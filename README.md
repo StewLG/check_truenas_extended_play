@@ -74,3 +74,6 @@ CRITICAL - No Zpools found matching PoolNameWhichIsNotActuallyThere out of 2 poo
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type repl -nv
 OK - No replication errors
 ```
+
+# Feedback Welcome
+If you have a suggestion or encounter a problem, I encourage users to get in touch. I've found half-baked Nagios plugins to be a chore to deal with, and I'd like this not to be one of them.
