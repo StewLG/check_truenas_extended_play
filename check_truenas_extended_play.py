@@ -261,7 +261,7 @@ class Startup(object):
 
 def main():
     # Build parser for arguments
-    parser = argparse.ArgumentParser(description='Checks a TrueNAS server using the 2.0 API')
+    parser = argparse.ArgumentParser(description='Checks a TrueNAS/FreeNAS server using the 2.0 API')
     parser.add_argument('-H', '--hostname', required=True, type=str, help='Hostname or IP address')
     parser.add_argument('-u', '--user', required=True, type=str, help='Normally only root works')
     parser.add_argument('-p', '--passwd', required=True, type=str, help='Password')
