@@ -34,28 +34,28 @@ c:\git\CheckStewNas\check_truenas_extended_play>
 
 # Usage Examples:
 
-## Check for alerts. This may be all the average user needs to set up. TrueNAS/FreeNas alerts about nearly all significant events here.
+### Check for alerts. This may be all the average user needs to set up. TrueNAS/FreeNas alerts about nearly all significant events here.
 
-# Normal operation
+### Normal operation
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type alerts -nv
 OK - No problem alerts
 
-# Sample error condition
+### Sample error condition
 check_truenas_extended_play.py -H sicknas.yourdomain.local -u root -p RootPa$$worD -type alerts -nv -ns
 CRITICAL - (C) Space usage for pool "BigMediaThree" is 85%. Optimal pool performance requires used space remain below 80%. - (W) New feature flags are available for volume BigMediaToo. Refer to the "Upgrading a ZFS Pool" subsection in the User Guide "Installing and Upgrading" chapter and "Upgrading" section for more instructions. - (W) New feature flags are available for volume BigMediaThree. Refer to the "Upgrading a ZFS Pool" subsection in the User Guide "Installing and Upgrading" chapter and "Upgrading" section for more instruction
 s.
 
 ## Check Zpool health
 
-## Check all Zpools
+### Check all Zpools
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type zpool -nv
 OK - No problem Zpools. Zpools examined:  ApolloZpoolOne ApolloZPoolEleven
 
-## Check a specifically named Zpool, ignoring any others
+### Check a specifically named Zpool, ignoring any others
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type zpool -nv --zpoolname ApolloZPoolEleven
 OK - No problem Zpools. Zpools examined:  ApolloZPoolEleven
 
-## Example of what happens if Zpool is not present
+### Example of what happens if Zpool is not present
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type zpool -nv --zpoolname PoolNameWhichIsNotActuallyThere
 CRITICAL - No Zpools found matching PoolNameWhichIsNotActuallyThere out of 2 pools (ApolloZpoolOne ApolloZPoolEleven)
 
