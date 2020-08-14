@@ -107,7 +107,8 @@ class Startup(object):
             r = requests.get(request_url, 
                              auth=(self._user, self._secret), 
                              verify=self._verify_cert) 
-            
+            logging.debug('request response: %s', r.text)
+
             r.raise_for_status()
         except:
             print ('UNKNOWN - request failed - Error when contacting TrueNAS server: ' + str(sys.exc_info()) )
@@ -124,14 +125,25 @@ class Startup(object):
         repls = self.get_request('replication')
         errors=0
         msg=''
+        replications_examined = ''
+
         try:
             for repl in repls:
-                repl_status = repl['repl_status'];
-                repl_was_not_success = (repl_status != 'Succeeded' and repl_status != 'Up to date')
-                repl_not_sending = not repl['repl_status'].startswith('Sending')
-                if (repl_was_not_success and repl_not_sending):
+                logging.debug('Replication response: %s', repl)
+                repl_name = repl['name']
+                logging.debug('Replication name: %s', repl_name)
+                repl_state_obj = repl['state']
+                logging.debug('Replication state object: %s', repl_state_obj)
+                repl_state_code = repl_state_obj['state']
+                logging.debug('Replication state code: %s', repl_state_code)
+
+                replications_examined = replications_examined + ' ' + repl_name + ': ' + repl_state_code
+                
+                repl_was_not_success = (repl_state_code != 'FINISHED')
+                repl_not_running = (repl_state_code != 'RUNNING')
+                if (repl_was_not_success and repl_not_running):
                     errors = errors + 1
-                    msg = msg + repl['repl_zfs'] + ' ';
+                    msg = msg + repl_name + ': ' + repl_state_code;
         except:
             print ('UNKNOWN - check_repl() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
             sys.exit(3)
@@ -140,7 +152,7 @@ class Startup(object):
             print ('WARNING - There are ' + str(errors) + ' replication errors [' + msg.strip() + ']. Go to Storage > Replication Tasks > View Replication Tasks in TrueNAS for more details.')
             sys.exit(1)
         else:
-            print ('OK - No replication errors')
+            print ('OK - No replication errors. Replications examined: ' + replications_examined)
             sys.exit(0)
  
     def check_alerts(self):
@@ -259,9 +271,11 @@ class Startup(object):
             #print('Should be setting no logging level at all')
             logger.setLevel(logging.CRITICAL)
 
+check_truenas_script_version = '1.1'
+
 def main():
     # Build parser for arguments
-    parser = argparse.ArgumentParser(description='Checks a TrueNAS/FreeNAS server using the 2.0 API')
+    parser = argparse.ArgumentParser(description='Checks a TrueNAS/FreeNAS server using the 2.0 API. Version ' + check_truenas_script_version)
     parser.add_argument('-H', '--hostname', required=True, type=str, help='Hostname or IP address')
     parser.add_argument('-u', '--user', required=True, type=str, help='Normally only root works')
     parser.add_argument('-p', '--passwd', required=True, type=str, help='Password')

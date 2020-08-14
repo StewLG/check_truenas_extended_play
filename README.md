@@ -5,7 +5,7 @@ This is an updated version of `check_truenas.py`, written by Goran Tornqvist, an
 
 https://exchange.nagios.org/directory/Plugins/Hardware/Storage-Systems/SAN-and-NAS/Check-TrueNAS-Health-2FReplication/details
 ```
-Checks a TrueNAS/FreeNAS server using the 2.0 API
+Checks a TrueNAS/FreeNAS server using the 2.0 API. Version 1.1
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -72,7 +72,7 @@ CRITICAL - No Zpools found matching PoolNameWhichIsNotActuallyThere out of 2 poo
 ## Check replication health
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type repl -nv
-OK - No replication errors
+OK - No replication errors. Replications examined:  ApolloDatasetReplications: FINISHED
 ```
 
 # Feedback Welcome
