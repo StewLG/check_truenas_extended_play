@@ -35,7 +35,7 @@ optional arguments:
 
 #### Alerts normal operation
 ```
-check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type alerts -nv
+check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type alerts -nv
 OK - No problem alerts
 ```
 
@@ -54,24 +54,24 @@ chapter and "Upgrading" section for more instructions.
 
 #### Check all Zpools
 ```
-check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type zpool -nv
+check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type zpool -nv
 OK - No problem Zpools. Zpools examined:  ApolloZpoolOne ApolloZPoolEleven
 ```
 
 #### Check a specifically named Zpool, ignoring any others
 ```
-check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type zpool -nv --zpoolname ApolloZPoolEleven
+check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type zpool -nv --zpoolname ApolloZPoolEleven
 OK - No problem Zpools. Zpools examined:  ApolloZPoolEleven
 ```
 
 #### Example of what happens if Zpool is not present
 ```
-check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type zpool -nv --zpoolname PoolNameWhichIsNotActuallyThere
+check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type zpool -nv --zpoolname PoolNameWhichIsNotActuallyThere
 CRITICAL - No Zpools found matching PoolNameWhichIsNotActuallyThere out of 2 pools (ApolloZpoolOne ApolloZPoolEleven)
 ```
 ## Check replication health
 ```
-check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -type repl -nv
+check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type repl -nv
 OK - No replication errors. Replications examined:  ApolloDatasetReplications: FINISHED
 ```
 
