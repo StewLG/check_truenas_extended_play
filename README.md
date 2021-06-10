@@ -14,7 +14,7 @@ optional arguments:
   -u USER, --user USER  Normally only root works
   -p PASSWD, --passwd PASSWD
                         Password
-  -t TYPE, --type TYPE  Type of check, either alerts, zpool, or repl
+  -t TYPE, --type TYPE  Type of check, either alerts, zpool, disks or repl
   -pn ZPOOLNAME, --zpoolname ZPOOLNAME
                         For check type zpool, the name of zpool to check.
                         Optional; defaults to all zpools.
@@ -48,6 +48,12 @@ to the "Upgrading a ZFS Pool" subsection in the User Guide "Installing and Upgra
 and "Upgrading" section for more instructions. - (W) New feature flags are available for volume 
 BigMediaThree. Refer to the "Upgrading a ZFS Pool" subsection in the User Guide "Installing and Upgrading" 
 chapter and "Upgrading" section for more instructions.
+```
+
+#### Check disks
+```
+check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type disks -nv
+OK: Disk used 76 % 
 ```
 
 ## Check Zpool health
