@@ -239,8 +239,20 @@ class Startup(object):
                     logging.debug('zpools_examined: %s', zpools_examined)
                     # 'label'=value[UOM];[warn];[crit];[min];[max]
                     mnt = pool["path"]
-                    maxBytes = pool["topology"]["data"][0]["stats"]["size"]
-                    usedBytes = pool["topology"]["data"][0]["stats"]["allocated"]
+                    logging.debug('Pool result: %s', pool)
+                    vdevs = pool["topology"]["data"]
+                    vdevCount = len(vdevs)
+                    logging.debug('Vdev Count: %d', vdevCount)
+                    maxBytes = 0
+                    usedBytes = 0
+
+                    # Add up usage for all the vdevs that might compose a zpool
+                    for currentVdev in vdevs:
+                        currentMaxBytes = currentVdev["stats"]["size"]
+                        currentUsedBytes = currentVdev["stats"]["allocated"]
+                        maxBytes += currentMaxBytes;
+                        usedBytes += currentUsedBytes;
+
                     usedMegaBytes = usedBytes / 1024 / 1024
                     warnPercent = self._wfree
                     critPercent = self._cfree
@@ -250,15 +262,16 @@ class Startup(object):
                         usagePercent = usedBytes / maxBytes * 100
                     else: 
                         usagePercent = 100
+                    usagePercentDisplayString = f'{usagePercent:3.1f}'
                     if (usagePercent >= critPercent):
                         crit += 1
-                        critial_messages += "- Pool " + pool_name + " usage " + f'{usagePercent:3.1f}' + "% exceeds critical value of " + str(critPercent) +"%"
+                        critial_messages += "- Pool " + pool_name + " usage " + usagePercentDisplayString + "% exceeds critical value of " + str(critPercent) +"%"
                     else:
                         if (usagePercent >= warnPercent):
                             warn += 1
-                            warning_messages += "- Pool " + pool_name + " usage " + f'{usagePercent:3.1f}' + "% exceeds warning value " + str(warnPercent) +"%"
+                            warning_messages += "- Pool " + pool_name + " usage " + usagePercentDisplayString + "% exceeds warning value " + str(warnPercent) +"%"
 
-                    logging.debug("Pool %s, Max, Used, Percent: %d %d %d", pool_name, maxBytes, usedBytes, usagePercent)
+                    logging.debug("Pool %s, Max, Used, Percent: %d %d %s", pool_name, maxBytes, usedBytes, usagePercentDisplayString)
                     perfdata += " " + mnt + "=" + str(usedMegaBytes) + "MB;" + str(warnBytes/1024/1024) + ";" + str(critBytes/1024/1024) + ";0;" + str(maxBytes/1024/1024)
                     if (pool_status != 'ONLINE'):
                         crit = crit + 1
