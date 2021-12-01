@@ -249,7 +249,7 @@ class Startup(object):
                     if (maxBytes > 0): 
                         usagePercent = usedBytes / maxBytes * 100
                     else: 
-                        usagePercent=100
+                        usagePercent = 100
                     if (usagePercent >= critPercent):
                         crit += 1
                         critial_messages += "- Pool " + pool_name + " usage " + f'{usagePercent:3.1f}' + "% exceeds critical value of " + str(critPercent) +"%"
@@ -310,7 +310,7 @@ class Startup(object):
             #print('Should be setting no logging level at all')
             logger.setLevel(logging.CRITICAL)
 
-check_truenas_script_version = '1.1'
+check_truenas_script_version = '1.2'
 
 def main():
     # Build parser for arguments
