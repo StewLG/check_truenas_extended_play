@@ -13,7 +13,7 @@ optional arguments:
                         Hostname or IP address
   -u USER, --user USER  Normally only root works
   -p PASSWD, --passwd PASSWD
-                        Password for Username provided by --user, OR if --user is not supplied, --passwd must be the API key
+                        Password for Username provided by --user, OR if --user is not supplied, --passwd must be an API key
   -t TYPE, --type TYPE  Type of check, either alerts, zpool, or repl
   -pn ZPOOLNAME, --zpoolname ZPOOLNAME
                         For check type zpool, the name of zpool to check.
