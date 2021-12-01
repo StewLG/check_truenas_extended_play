@@ -29,6 +29,11 @@ optional arguments:
   -d, --debug           Display debugging information; run script this way and
                         record result when asking for help.
 ```
+# Requirements
+
+- python3-urllib3  
+- python3-requests
+
 # Usage Examples:
 
 #### Check for alerts. This may be all the average user needs to set up. TrueNAS/FreeNas alerts about nearly all significant events here.
