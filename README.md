@@ -81,7 +81,6 @@ OK - No problem Zpools. Zpools examined:  ApolloZPoolEleven
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M --type zpool -nv --zpoolname ApolloZPoolEleven -c 50
 OK - No problem Zpools. Zpools examined:  ApolloZPoolEleven
-
 ```
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M --type zpool -nv --zpoolname ApolloZPoolEleven -c 60
@@ -92,7 +91,6 @@ WARNING - Pool ApolloZPoolEleven usage 61.5% exceeds warning value 60%;| /mnt/Ap
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M --type zpool -nv --zpoolname ApolloZPoolEleven -c 80
 OK - No problem Zpools. Zpools examined:  ApolloZPoolEleven
-
 ```
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M --type zpool -nv --zpoolname ApolloZPoolEleven -c 90
@@ -104,6 +102,7 @@ WARNING - Pool ApolloZPoolEleven usage 91.5% exceeds warning value 90%;| /mnt/Ap
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type zpool -nv --zpoolname PoolNameWhichIsNotActuallyThere
 CRITICAL - No Zpools found matching PoolNameWhichIsNotActuallyThere out of 2 pools (ApolloZpoolOne ApolloZPoolEleven)
 ```
+
 ## Check replication health
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type repl -nv
