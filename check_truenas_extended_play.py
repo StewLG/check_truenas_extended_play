@@ -2,7 +2,8 @@
 
 # The MIT License (MIT)
 # Copyright (c) 2015 Goran Tornqvist
-# Extended by Stewart Loving-Gibbard 2020
+# Extended by Stewart Loving-Gibbard 2020, 2021
+# Additional help from Folke Ashberg 2021
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -109,8 +110,13 @@ class Startup(object):
                 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             auth=False
             headers={}
-            if (self._user): auth=(self._user, self._secret)
-            else: headers={'Authorization': 'Bearer ' + self._secret}
+
+            # If username provided, try to authenticate with username/password combo
+            if (self._user): 
+                auth=(self._user, self._secret)
+            # Otherwise, use API key
+            else: 
+                headers={'Authorization': 'Bearer ' + self._secret}
             
             r = requests.get(request_url, 
                             auth=auth,
@@ -240,21 +246,23 @@ class Startup(object):
                     critPercent = self._cfree
                     warnBytes = maxBytes / 100 * warnPercent
                     critBytes = maxBytes / 100 * critPercent
-                    if (maxBytes > 0): usagePercent = usedBytes / maxBytes * 100
-                    else: usagePercent=100
-                    if (usagePercent>=critPercent):
+                    if (maxBytes > 0): 
+                        usagePercent = usedBytes / maxBytes * 100
+                    else: 
+                        usagePercent=100
+                    if (usagePercent >= critPercent):
                         crit += 1
-                        critial_messages += "- Pool " + pool_name + " exceeds critical value of " + str(critPercent) +"%"
+                        critial_messages += "- Pool " + pool_name + " usage " + f'{usagePercent:3.1f}' + "%" + " exceeds critical value of " + str(critPercent) +"%"
                     else:
-                        if (usagePercent>=warnPercent):
+                        if (usagePercent >= warnPercent):
                             warn += 1
-                            warning_messages += "- Pool " + pool_name + " exceeds warning value " + str(warnPercent) +"%"
+                            warning_messages += "- Pool " + pool_name + " usage " + f'{usagePercent:3.1f}' + "%" + " exceeds warning value " + str(warnPercent) +"%"
 
                     logging.debug("Pool %s, Max, Used, Percent: %d %d %d", pool_name, maxBytes, usedBytes, usagePercent)
                     perfdata += " " + mnt + "=" + str(usedMegaBytes) + "MB;" + str(warnBytes/1024/1024) + ";" + str(critBytes/1024/1024) + ";0;" + str(maxBytes/1024/1024)
                     if (pool_status != 'ONLINE'):
                         crit = crit + 1
-                        critial_messages = critial_messages + '- (C) ZPool ' + pool_name + 'is  ' + pool_status
+                        critial_messages = critial_messages + '- (C) ZPool ' + pool_name + 'is ' + pool_status
         except:
             print ('UNKNOWN - check_zpool() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
             sys.exit(3)
@@ -316,8 +324,8 @@ def main():
     parser.add_argument('-nv', '--no-verify-cert', required=False, action='store_true', help='Do not verify the server SSL cert; default is to verify the SSL cert')
     parser.add_argument('-ig', '--ignore-dismissed-alerts', required=False, action='store_true', help='Ignore alerts that have already been dismissed in FreeNas/TrueNAS; default is to treat them as relevant')
     parser.add_argument('-d', '--debug', required=False, action='store_true', help='Display debugging information; run script this way and record result when asking for help.')
-    parser.add_argument('-c', '--cfree', required=False, type=int, default=90, help='Critical Memory Free threshold.')
-    parser.add_argument('-w', '--wfree', required=False, type=int, default=80, help='Warning Memory Free threshold.')
+    parser.add_argument('-c', '--cfree', required=False, type=int, default=90, help='Critical storage capacity free threshold.')
+    parser.add_argument('-w', '--wfree', required=False, type=int, default=80, help='Warning storage capacity free threshold.')
  
     # if no arguments, print out help
     if len(sys.argv)==1:
