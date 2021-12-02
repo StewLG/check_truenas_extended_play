@@ -265,11 +265,11 @@ class Startup(object):
                     usagePercentDisplayString = f'{usagePercent:3.1f}'
                     if (usagePercent >= critPercent):
                         crit += 1
-                        critial_messages += "- Pool " + pool_name + " usage " + usagePercentDisplayString + "% exceeds critical value of " + str(critPercent) +"%"
+                        critial_messages += "- Pool " + pool_name + " usage " + usagePercentDisplayString + "% exceeds critical value of " + str(critPercent) + "%"
                     else:
                         if (usagePercent >= warnPercent):
                             warn += 1
-                            warning_messages += "- Pool " + pool_name + " usage " + usagePercentDisplayString + "% exceeds warning value " + str(warnPercent) +"%"
+                            warning_messages += "- Pool " + pool_name + " usage " + usagePercentDisplayString + "% exceeds warning value " + str(warnPercent) + "%"
 
                     logging.debug("Pool %s, Max, Used, Percent: %d %d %s", pool_name, maxBytes, usedBytes, usagePercentDisplayString)
                     perfdata += " " + mnt + "=" + str(usedMegaBytes) + "MB;" + str(warnBytes/1024/1024) + ";" + str(critBytes/1024/1024) + ";0;" + str(maxBytes/1024/1024)
