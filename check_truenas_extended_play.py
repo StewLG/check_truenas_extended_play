@@ -31,6 +31,11 @@ import string
 import urllib3
 import requests
 import logging
+from enum import Enum
+
+class RequestTypeEnum(Enum):
+    GET_REQUEST = 1
+    POST_REQUEST = 2
 
 class Startup(object):
 
@@ -60,10 +65,12 @@ class Startup(object):
         logging.debug('zpool_name: %s', self._zpool_name)
         logging.debug('')
  
-    def post_request(self, resource):
+
+    def do_request(self, resource, requestType):
         try:
             request_url = '%s/%s/' % (self._base_url, resource)
             logging.debug('request_url: %s', request_url)
+            logging.debug('requestType: ' + repr(requestType))
             
             # We get annoying warning text output from the urllib3 library if we fail to do this
             if (not self._verify_cert):
@@ -78,11 +85,23 @@ class Startup(object):
             else: 
                 headers={'Authorization': 'Bearer ' + self._secret}
             
-            r = requests.post(request_url, 
-                            auth=auth,
-                            headers=headers,
-                            verify=self._verify_cert)
-            logging.debug('POST request response: %s', r.text)
+            # GET Request
+            if (requestType is RequestTypeEnum.GET_REQUEST):
+                r = requests.get(request_url, 
+                                auth=auth,
+                                headers=headers,
+                                verify=self._verify_cert)
+                logging.debug('GET request response: %s', r.text)                
+            # POST Request                
+            elif (requestType is RequestTypeEnum.POST_REQUEST):
+                r = requests.post(request_url, 
+                                auth=auth,
+                                headers=headers,
+                                verify=self._verify_cert)
+                logging.debug('POST request response: %s', r.text)
+            else:
+                print ('UNKNOWN - request failed - Unknown RequestType: ' + requestType)
+                sys.exit(3)
 
             r.raise_for_status()
         except:
@@ -94,44 +113,88 @@ class Startup(object):
                 return r.json()
             except:
                 print ('UNKNOWN - json failed to parse - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
-                sys.exit(3) 
+                sys.exit(3)             
 
- 
     def get_request(self, resource):
-        try:
-            request_url = '%s/%s/' % (self._base_url, resource)
-            logging.debug('request_url: %s', request_url)
-            
-            # We get annoying warning text output from the urllib3 library if we fail to do this
-            if (not self._verify_cert):
-                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            auth=False
-            headers={}
+        return self.do_request(resource, RequestTypeEnum.GET_REQUEST)
+        #self.log_startup_information()        
 
-            # If username provided, try to authenticate with username/password combo
-            if (self._user): 
-                auth=(self._user, self._secret)
-            # Otherwise, use API key
-            else: 
-                headers={'Authorization': 'Bearer ' + self._secret}
-            
-            r = requests.get(request_url, 
-                            auth=auth,
-                            headers=headers,
-                            verify=self._verify_cert)
-            logging.debug('GET request response: %s', r.text)
+    def post_request(self, resource):
+        return self.do_request(resource, RequestTypeEnum.POST_REQUEST)
+        #self.log_startup_information()
 
-            r.raise_for_status()
-        except:
-            print ('UNKNOWN - request failed - Error when contacting TrueNAS server: ' + str(sys.exc_info()) )
-            sys.exit(3)
+    # def post_request(self, resource):
+    #     try:
+    #         request_url = '%s/%s/' % (self._base_url, resource)
+    #         logging.debug('request_url: %s', request_url)
+            
+    #         # We get annoying warning text output from the urllib3 library if we fail to do this
+    #         if (not self._verify_cert):
+    #             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    #         auth=False
+    #         headers={}
+
+    #         # If username provided, try to authenticate with username/password combo
+    #         if (self._user): 
+    #             auth=(self._user, self._secret)
+    #         # Otherwise, use API key
+    #         else: 
+    #             headers={'Authorization': 'Bearer ' + self._secret}
+            
+    #         r = requests.post(request_url, 
+    #                         auth=auth,
+    #                         headers=headers,
+    #                         verify=self._verify_cert)
+    #         logging.debug('POST request response: %s', r.text)
+
+    #         r.raise_for_status()
+    #     except:
+    #         print ('UNKNOWN - request failed - Error when contacting TrueNAS server: ' + str(sys.exc_info()) )
+    #         sys.exit(3)
  
-        if r.ok:
-            try:
-                return r.json()
-            except:
-                print ('UNKNOWN - json failed to parse - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
-                sys.exit(3) 
+    #     if r.ok:
+    #         try:
+    #             return r.json()
+    #         except:
+    #             print ('UNKNOWN - json failed to parse - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
+    #             sys.exit(3) 
+
+ 
+    # def get_request(self, resource):
+    #     try:
+    #         request_url = '%s/%s/' % (self._base_url, resource)
+    #         logging.debug('request_url: %s', request_url)
+            
+    #         # We get annoying warning text output from the urllib3 library if we fail to do this
+    #         if (not self._verify_cert):
+    #             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    #         auth=False
+    #         headers={}
+
+    #         # If username provided, try to authenticate with username/password combo
+    #         if (self._user): 
+    #             auth=(self._user, self._secret)
+    #         # Otherwise, use API key
+    #         else: 
+    #             headers={'Authorization': 'Bearer ' + self._secret}
+            
+    #         r = requests.get(request_url, 
+    #                         auth=auth,
+    #                         headers=headers,
+    #                         verify=self._verify_cert)
+    #         logging.debug('GET request response: %s', r.text)
+
+    #         r.raise_for_status()
+    #     except:
+    #         print ('UNKNOWN - request failed - Error when contacting TrueNAS server: ' + str(sys.exc_info()) )
+    #         sys.exit(3)
+ 
+    #     if r.ok:
+    #         try:
+    #             return r.json()
+    #         except:
+    #             print ('UNKNOWN - json failed to parse - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
+    #             sys.exit(3) 
 
     def check_repl(self):
         repls = self.get_request('replication')
