@@ -313,7 +313,7 @@ class Startup(object):
             #print('Should be setting no logging level at all')
             logger.setLevel(logging.CRITICAL)
 
-check_truenas_script_version = '1.2'
+check_truenas_script_version = '1.3'
 
 def main():
     # Build parser for arguments
