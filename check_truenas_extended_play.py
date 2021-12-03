@@ -34,7 +34,7 @@ import logging
 
 class Startup(object):
 
-    def __init__(self, hostname, user, secret, use_ssl, verify_cert, ignore_dismissed_alerts, debug_logging, zpool_name, wfree, cfree):
+    def __init__(self, hostname, user, secret, use_ssl, verify_cert, ignore_dismissed_alerts, debug_logging, zpool_name):
         self._hostname = hostname
         self._user = user
         self._secret = secret
@@ -43,8 +43,6 @@ class Startup(object):
         self._ignore_dismissed_alerts = ignore_dismissed_alerts
         self._debug_logging = debug_logging
         self._zpool_name = zpool_name
-        self._wfree = wfree
-        self._cfree = cfree
  
         http_request_header = 'https' if use_ssl else 'http'
  
@@ -60,8 +58,6 @@ class Startup(object):
         logging.debug('verify_cert: %s', self._verify_cert)
         logging.debug('base_url: %s', self._base_url)
         logging.debug('zpool_name: %s', self._zpool_name)
-        logging.debug('wfree: %d', self._wfree)
-        logging.debug('cfree: %d', self._cfree)
         logging.debug('')
  
 
