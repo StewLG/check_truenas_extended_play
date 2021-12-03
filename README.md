@@ -85,6 +85,20 @@ CRITICAL - No Zpools found matching PoolNameWhichIsNotActuallyThere out of 2 poo
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type repl -nv
 OK - No replication errors. Replications examined:  ApolloDatasetReplications: FINISHED
 ```
+## Check for TrueNAS updates - no updates available
+```
+check_truenas_extended_play.py -H apollo.yourdomain.local --type update -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M -nv
+OK - Update Status: UNAVAILABLE (no update available)
+```
+'UNAVAILABLE' is the normal update status, and does not indicate a problem.
+
+## Check for TrueNAS updates - possible updates available
+```
+check_truenas_extended_play.py -H apollo.yourdomain.local --type update -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M -nv
+WARNING - Update Status: AVAILABLE (an update is available). Update may be required. Go to TrueNAS Dashboard -> System -> Update to check for newer version.
+```
+ 
+All update issues are merely warnings, and not critical errors.
 
 # Version History
 
@@ -92,6 +106,9 @@ OK - No replication errors. Replications examined:  ApolloDatasetReplications: F
 
 Added API Key authentication. Thanks to Folke Ashberg.
 
+*December 4, 2021 - Version 1.3* 
+
+Added update check, by request of @madtempest.
 
 # Feedback Welcome
 If you have a suggestion or encounter a problem, I encourage users to get in touch. I've found half-baked Nagios plugins to be a chore to deal with, and I'd like this not to be one of them.

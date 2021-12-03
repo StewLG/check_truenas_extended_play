@@ -60,41 +60,42 @@ class Startup(object):
         logging.debug('zpool_name: %s', self._zpool_name)
         logging.debug('')
  
+    def post_request(self, resource):
+        try:
+            request_url = '%s/%s/' % (self._base_url, resource)
+            logging.debug('request_url: %s', request_url)
+            
+            # We get annoying warning text output from the urllib3 library if we fail to do this
+            if (not self._verify_cert):
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            auth=False
+            headers={}
 
-    # This was causing me trouble, but we may need to bring something like it back
-    # if we need to POST.
-    
-    # def request(self, resource, method='get', data=none):
-        # if data is none:
-            # data = ''
-        # try:
-            # request_url = '%s/%s/' % (self._base_url, resource)
-            # logging.debug('request_url: %s', request_url)
+            # If username provided, try to authenticate with username/password combo
+            if (self._user): 
+                auth=(self._user, self._secret)
+            # Otherwise, use API key
+            else: 
+                headers={'Authorization': 'Bearer ' + self._secret}
             
-            # # we get annoying warning text output from the urllib3 library if we fail to do this
-            # if (not self._verify_cert):
-                # urllib3.disable_warnings(urllib3.exceptions.insecurerequestwarning);
-            
-            # r = requests.request(
-                # method,
-                # request_url,
-                # data=json.dumps(data),
-                # headers={'content-type': "application/json"},
-                # auth=(self._user, self._secret),
-                # verify=self._verify_cert,
-            # )
-            
-            # r.raise_for_status()
-        # except:
-            # print ('unknown - request failed - error when contacting truenas server: ' + str(sys.exc_info()) )
-            # sys.exit(3)
+            r = requests.post(request_url, 
+                            auth=auth,
+                            headers=headers,
+                            verify=self._verify_cert)
+            logging.debug('POST request response: %s', r.text)
+
+            r.raise_for_status()
+        except:
+            print ('UNKNOWN - request failed - Error when contacting TrueNAS server: ' + str(sys.exc_info()) )
+            sys.exit(3)
  
-        # if r.ok:
-            # try:
-                # return r.json()
-            # except:
-                # print ('unknown - json failed to parse - error when contacting truenas server: ' + str(sys.exc_info()))
-                # sys.exit(3)
+        if r.ok:
+            try:
+                return r.json()
+            except:
+                print ('UNKNOWN - json failed to parse - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
+                sys.exit(3) 
+
  
     def get_request(self, resource):
         try:
@@ -118,7 +119,7 @@ class Startup(object):
                             auth=auth,
                             headers=headers,
                             verify=self._verify_cert)
-            logging.debug('request response: %s', r.text)
+            logging.debug('GET request response: %s', r.text)
 
             r.raise_for_status()
         except:
@@ -165,7 +166,46 @@ class Startup(object):
         else:
             print ('OK - No replication errors. Replications examined: ' + replications_examined)
             sys.exit(0)
+
+
+    def check_update(self):
+        updateCheckResult = self.post_request('update/check_available')
+        warnings=0
+        errors=0
+        msg=''
+        needsUpdateOrOtherPossibleIssue=False
+        updateCheckResultString=''
+
+        # From https://www.truenas.com/docs/api/rest.html#api-Update-updateCheckAvailablePost
+        updateCheckResultDict = {
+            'UNAVAILABLE': 'no update available',
+            'AVAILABLE': 'an update is available',
+            'REBOOT_REQUIRED': 'an update has already been applied',
+            'HA_UNAVAILABLE': 'HA is non-functional'
+        }
+
+        try:
+            logging.debug('Update check result: %s', updateCheckResult)
+            
+            updateCheckResultString = updateCheckResult['status']
+            needsUpdateOrOtherPossibleIssue = (updateCheckResultString != 'UNAVAILABLE')
+
+        except:
+            print ('UNKNOWN - check_update() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
+            sys.exit(3)
  
+        if needsUpdateOrOtherPossibleIssue:
+            if (updateCheckResultString in updateCheckResultDict):
+                print ('WARNING - Update Status: ' + updateCheckResultString + ' (' + updateCheckResultDict[updateCheckResultString] + '). Update may be required. Go to TrueNAS Dashboard -> System -> Update to check for newer version.')
+            # Unfamiliar status we've never seen before    
+            else:
+                print ('WARNING - Unknown Update Status: ' + updateCheckResultString + '. Update may be required. Go to TrueNAS Dashboard -> System -> Update to check for newer version.')
+            sys.exit(1)
+        else:
+            print ('OK - Update Status: ' + updateCheckResultString + ' (' + updateCheckResultDict[updateCheckResultString] + ')')
+            sys.exit(0)
+
+
     def check_alerts(self):
         alerts = self.get_request('alert/list')
         
@@ -264,10 +304,10 @@ class Startup(object):
             self.check_alerts()
         elif alert_type == 'repl':
             self.check_repl()
-            
+        elif alert_type == 'update':
+            self.check_update()
         elif alert_type == 'zpool':
             self.check_zpool()
-
         else:
             print ("Unknown type: " + alert_type)
             sys.exit(3)
@@ -290,7 +330,7 @@ def main():
     parser.add_argument('-H', '--hostname', required=True, type=str, help='Hostname or IP address')
     parser.add_argument('-u', '--user', required=False, type=str, help='Username, only root works, if not specified: use API Key')
     parser.add_argument('-p', '--passwd', required=True, type=str, help='Password or API Key')
-    parser.add_argument('-t', '--type', required=True, type=str, help='Type of check, either alerts, zpool, or repl')
+    parser.add_argument('-t', '--type', required=True, type=str, help='Type of check, either alerts, zpool, repl, or update')
     parser.add_argument('-pn', '--zpoolname', required=False, type=str, default='all', help='For check type zpool, the name of zpool to check. Optional; defaults to all zpools.')
     parser.add_argument('-ns', '--no-ssl', required=False, action='store_true', help='Disable SSL (use HTTP); default is to use SSL (use HTTPS)')
     parser.add_argument('-nv', '--no-verify-cert', required=False, action='store_true', help='Do not verify the server SSL cert; default is to verify the SSL cert')
