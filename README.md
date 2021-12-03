@@ -88,7 +88,9 @@ OK - No replication errors. Replications examined:  ApolloDatasetReplications: F
 
 # Version History
 
-December 3, 2021 - Version 1.2 - Added API Key authentication. Thanks to Folke Ashberg.
+*December 3, 2021 - Version 1.2* 
+
+Added API Key authentication. Thanks to Folke Ashberg.
 
 
 # Feedback Welcome
