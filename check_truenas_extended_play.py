@@ -217,7 +217,6 @@ class Startup(object):
         zpools_examined = ''
         actual_zpool_count = 0
         all_pool_names = ''
-        perfdata= ';|'
         
         looking_for_all_pools = self._zpool_name.lower() == 'all'
         
@@ -227,9 +226,9 @@ class Startup(object):
                 actual_zpool_count += 1
                 pool_name = pool['name']
                 pool_status = pool['status']
-
+                
                 all_pool_names += pool_name + ' '
-
+                
                 logging.debug('Checking zpool for relevancy: %s with status %s', pool_name, pool_status)
                 
                 # Either match all pools, or only the requested pool
@@ -237,42 +236,6 @@ class Startup(object):
                     logging.debug('Relevant Zpool found: %s with status %s', pool_name, pool_status)
                     zpools_examined = zpools_examined + ' ' + pool_name
                     logging.debug('zpools_examined: %s', zpools_examined)
-                    # 'label'=value[UOM];[warn];[crit];[min];[max]
-                    mnt = pool["path"]
-                    logging.debug('Pool result: %s', pool)
-                    vdevs = pool["topology"]["data"]
-                    vdevCount = len(vdevs)
-                    logging.debug('Vdev Count: %d', vdevCount)
-                    maxBytes = 0
-                    usedBytes = 0
-
-                    # Add up usage for all the vdevs that might compose a zpool
-                    for currentVdev in vdevs:
-                        currentMaxBytes = currentVdev["stats"]["size"]
-                        currentUsedBytes = currentVdev["stats"]["allocated"]
-                        maxBytes += currentMaxBytes;
-                        usedBytes += currentUsedBytes;
-
-                    usedMegaBytes = usedBytes / 1024 / 1024
-                    warnPercent = self._wfree
-                    critPercent = self._cfree
-                    warnBytes = maxBytes / 100 * warnPercent
-                    critBytes = maxBytes / 100 * critPercent
-                    if (maxBytes > 0): 
-                        usagePercent = usedBytes / maxBytes * 100
-                    else: 
-                        usagePercent = 100
-                    usagePercentDisplayString = f'{usagePercent:3.1f}'
-                    if (usagePercent >= critPercent):
-                        crit += 1
-                        critial_messages += "- Pool " + pool_name + " usage " + usagePercentDisplayString + "% exceeds critical value of " + str(critPercent) + "%"
-                    else:
-                        if (usagePercent >= warnPercent):
-                            warn += 1
-                            warning_messages += "- Pool " + pool_name + " usage " + usagePercentDisplayString + "% exceeds warning value " + str(warnPercent) + "%"
-
-                    logging.debug("Pool %s, Max, Used, Percent: %d %d %s", pool_name, maxBytes, usedBytes, usagePercentDisplayString)
-                    perfdata += " " + mnt + "=" + str(usedMegaBytes) + "MB;" + str(warnBytes/1024/1024) + ";" + str(critBytes/1024/1024) + ";0;" + str(maxBytes/1024/1024)
                     if (pool_status != 'ONLINE'):
                         crit = crit + 1
                         critial_messages = critial_messages + '- (C) ZPool ' + pool_name + 'is ' + pool_status
@@ -291,13 +254,13 @@ class Startup(object):
 
         if crit > 0:
             # Show critical errors before any warnings
-            print ('CRITICAL ' + critial_messages + warning_messages + perfdata)
+            print ('CRITICAL ' + critial_messages + warning_messages)
             sys.exit(2)
         elif warn > 0:
-            print ('WARNING ' + warning_messages + perfdata)
+            print ('WARNING ' + warning_messages)
             sys.exit(1)
         else:
-            print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined + perfdata)
+            print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
             sys.exit(0)
  
     def handle_requested_alert_type(self, alert_type):
@@ -337,8 +300,6 @@ def main():
     parser.add_argument('-nv', '--no-verify-cert', required=False, action='store_true', help='Do not verify the server SSL cert; default is to verify the SSL cert')
     parser.add_argument('-ig', '--ignore-dismissed-alerts', required=False, action='store_true', help='Ignore alerts that have already been dismissed in FreeNas/TrueNAS; default is to treat them as relevant')
     parser.add_argument('-d', '--debug', required=False, action='store_true', help='Display debugging information; run script this way and record result when asking for help.')
-    parser.add_argument('-c', '--cfree', required=False, type=int, default=90, help='Critical storage capacity free threshold.')
-    parser.add_argument('-w', '--wfree', required=False, type=int, default=80, help='Warning storage capacity free threshold.')
  
     # if no arguments, print out help
     if len(sys.argv)==1:
@@ -351,7 +312,7 @@ def main():
     use_ssl = not args.no_ssl
     verify_ssl_cert=not args.no_verify_cert
  
-    startup = Startup(args.hostname, args.user, args.passwd, use_ssl, verify_ssl_cert, args.ignore_dismissed_alerts, args.debug, args.zpoolname, args.wfree, args.cfree)
+    startup = Startup(args.hostname, args.user, args.passwd, use_ssl, verify_ssl_cert, args.ignore_dismissed_alerts, args.debug, args.zpoolname)
  
     startup.handle_requested_alert_type(args.type)
  
