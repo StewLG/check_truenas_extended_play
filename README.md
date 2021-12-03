@@ -18,8 +18,6 @@ optional arguments:
   -pn ZPOOLNAME, --zpoolname ZPOOLNAME
                         For check type zpool, the name of zpool to check.
                         Optional; defaults to all zpools.
-  -c, --cfree           Critical storage capacity percentage for zpool. 
-  -w, --wfree           Warning storage capacity percentage for zpool.
   -ns, --no-ssl         Disable SSL (use HTTP); default is to use SSL (use
                         HTTPS)
   -nv, --no-verify-cert
@@ -77,32 +75,11 @@ check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy -
 OK - No problem Zpools. Zpools examined:  ApolloZPoolEleven
 ```
 
-#### Check a specifically named Zpool with capacity warning check
-```
-check_truenas_extended_play.py -H apollo.yourdomain.local -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M --type zpool -nv --zpoolname ApolloZPoolEleven -w 50
-OK - No problem Zpools. Zpools examined:  ApolloZPoolEleven
-```
-```
-check_truenas_extended_play.py -H apollo.yourdomain.local -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M --type zpool -nv --zpoolname ApolloZPoolEleven -w 60
-WARNING - Pool ApolloZPoolEleven usage 61.5% exceeds warning value 60%;| /mnt/ApolloZPoolEleven=82085795.5625MB;80098099.2;120147148.80000001;0;133496832.0
-```
-
-#### Check a specifically named Zpool with capacity critical check
-```
-check_truenas_extended_play.py -H apollo.yourdomain.local -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M --type zpool -nv --zpoolname ApolloZPoolEleven -c 80
-OK - No problem Zpools. Zpools examined:  ApolloZPoolEleven
-```
-```
-check_truenas_extended_play.py -H apollo.yourdomain.local -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M --type zpool -nv --zpoolname ApolloZPoolEleven -c 90
-CRITICAL - Pool ApolloZPoolEleven usage 91.5% exceeds warning value 90%;| /mnt/ApolloZPoolEleven=91085795.5625MB;90098099.2;120147148.80000001;0;133496832.0
-```
-
 #### Example of what happens if Zpool is not present
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type zpool -nv --zpoolname PoolNameWhichIsNotActuallyThere
 CRITICAL - No Zpools found matching PoolNameWhichIsNotActuallyThere out of 2 pools (ApolloZpoolOne ApolloZPoolEleven)
 ```
-
 ## Check replication health
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type repl -nv
