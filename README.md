@@ -5,7 +5,7 @@ This is an updated version of `check_truenas.py`, written by Goran Tornqvist, an
 
 https://exchange.nagios.org/directory/Plugins/Hardware/Storage-Systems/SAN-and-NAS/Check-TrueNAS-Health-2FReplication/details
 ```
-Checks a TrueNAS/FreeNAS server using the 2.0 API. Version 1.1
+Checks a TrueNAS/FreeNAS server using the 2.0 API. Version 1.2
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -13,7 +13,7 @@ optional arguments:
                         Hostname or IP address
   -u USER, --user USER  Normally only root works
   -p PASSWD, --passwd PASSWD
-                        Password
+                        Password for Username provided by --user, OR if --user is not supplied, --passwd must be an API key
   -t TYPE, --type TYPE  Type of check, either alerts, zpool, or repl
   -pn ZPOOLNAME, --zpoolname ZPOOLNAME
                         For check type zpool, the name of zpool to check.
@@ -38,9 +38,15 @@ optional arguments:
 
 #### Check for alerts. This may be all the average user needs to set up. TrueNAS/FreeNas alerts about nearly all significant events here.
 
-#### Alerts normal operation
+#### Alerts normal operation - username/password authentication
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type alerts -nv
+OK - No problem alerts
+```
+
+#### Alerts normal operation - API Key authentication
+```
+check_truenas_extended_play.py -H apollo.yourdomain.local -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M --type alerts -nv
 OK - No problem alerts
 ```
 
@@ -79,6 +85,13 @@ CRITICAL - No Zpools found matching PoolNameWhichIsNotActuallyThere out of 2 poo
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type repl -nv
 OK - No replication errors. Replications examined:  ApolloDatasetReplications: FINISHED
 ```
+
+# Version History
+
+*December 3, 2021 - Version 1.2* 
+
+Added API Key authentication. Thanks to Folke Ashberg.
+
 
 # Feedback Welcome
 If you have a suggestion or encounter a problem, I encourage users to get in touch. I've found half-baked Nagios plugins to be a chore to deal with, and I'd like this not to be one of them.

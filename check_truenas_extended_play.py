@@ -2,7 +2,8 @@
 
 # The MIT License (MIT)
 # Copyright (c) 2015 Goran Tornqvist
-# Extended by Stewart Loving-Gibbard 2020
+# Extended by Stewart Loving-Gibbard 2020, 2021
+# Additional help from Folke Ashberg 2021
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -102,11 +103,21 @@ class Startup(object):
             
             # We get annoying warning text output from the urllib3 library if we fail to do this
             if (not self._verify_cert):
-                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning);
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            auth=False
+            headers={}
+
+            # If username provided, try to authenticate with username/password combo
+            if (self._user): 
+                auth=(self._user, self._secret)
+            # Otherwise, use API key
+            else: 
+                headers={'Authorization': 'Bearer ' + self._secret}
             
             r = requests.get(request_url, 
-                             auth=(self._user, self._secret), 
-                             verify=self._verify_cert) 
+                            auth=auth,
+                            headers=headers,
+                            verify=self._verify_cert)
             logging.debug('request response: %s', r.text)
 
             r.raise_for_status()
@@ -143,7 +154,7 @@ class Startup(object):
                 repl_not_running = (repl_state_code != 'RUNNING')
                 if (repl_was_not_success and repl_not_running):
                     errors = errors + 1
-                    msg = msg + repl_name + ': ' + repl_state_code;
+                    msg = msg + repl_name + ': ' + repl_state_code
         except:
             print ('UNKNOWN - check_repl() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
             sys.exit(3)
@@ -203,7 +214,7 @@ class Startup(object):
         actual_zpool_count = 0
         all_pool_names = ''
         
-        looking_for_all_pools = self._zpool_name.lower() == 'all';
+        looking_for_all_pools = self._zpool_name.lower() == 'all'
         
         try:
             for pool in pool_results:
@@ -223,7 +234,7 @@ class Startup(object):
                     logging.debug('zpools_examined: %s', zpools_examined)
                     if (pool_status != 'ONLINE'):
                         crit = crit + 1
-                        critial_messages = critial_messages + '- (C) ZPool ' + pool_name + 'is  ' + pool_status
+                        critial_messages = critial_messages + '- (C) ZPool ' + pool_name + 'is ' + pool_status
         except:
             print ('UNKNOWN - check_zpool() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
             sys.exit(3)
@@ -271,14 +282,14 @@ class Startup(object):
             #print('Should be setting no logging level at all')
             logger.setLevel(logging.CRITICAL)
 
-check_truenas_script_version = '1.1'
+check_truenas_script_version = '1.2'
 
 def main():
     # Build parser for arguments
     parser = argparse.ArgumentParser(description='Checks a TrueNAS/FreeNAS server using the 2.0 API. Version ' + check_truenas_script_version)
     parser.add_argument('-H', '--hostname', required=True, type=str, help='Hostname or IP address')
-    parser.add_argument('-u', '--user', required=True, type=str, help='Normally only root works')
-    parser.add_argument('-p', '--passwd', required=True, type=str, help='Password')
+    parser.add_argument('-u', '--user', required=False, type=str, help='Username, only root works, if not specified: use API Key')
+    parser.add_argument('-p', '--passwd', required=True, type=str, help='Password or API Key')
     parser.add_argument('-t', '--type', required=True, type=str, help='Type of check, either alerts, zpool, or repl')
     parser.add_argument('-pn', '--zpoolname', required=False, type=str, default='all', help='For check type zpool, the name of zpool to check. Optional; defaults to all zpools.')
     parser.add_argument('-ns', '--no-ssl', required=False, action='store_true', help='Disable SSL (use HTTP); default is to use SSL (use HTTPS)')
