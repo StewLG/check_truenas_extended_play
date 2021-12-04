@@ -499,7 +499,10 @@ class Startup(object):
             #print('Should be setting no logging level at all')
             logger.setLevel(logging.CRITICAL)
 
-check_truenas_script_version = '1.3'
+check_truenas_script_version = '1.4'
+
+default_zpool_warning_percent = 80
+default_zool_critical_percent = 90
 
 def main():
     # Build parser for arguments
@@ -513,9 +516,9 @@ def main():
     parser.add_argument('-nv', '--no-verify-cert', required=False, action='store_true', help='Do not verify the server SSL cert; default is to verify the SSL cert')
     parser.add_argument('-ig', '--ignore-dismissed-alerts', required=False, action='store_true', help='Ignore alerts that have already been dismissed in FreeNas/TrueNAS; default is to treat them as relevant')
     parser.add_argument('-d', '--debug', required=False, action='store_true', help='Display debugging information; run script this way and record result when asking for help.')
-    parser.add_argument('-zw', '--zpool-warn', required=False, type=int, default=80, help='ZPool warning storage capacity free threshold.')    
-    parser.add_argument('-zc', '--zpool-critical', required=False, type=int, default=90, help='ZPool critical storage capacity free threshold.')
-    parser.add_argument('-zp', '--zpool-perfdata', required=False, action='store_true', help='Add Zpool capacity perf data to output. Used with zpool_capacity check')    
+    parser.add_argument('-zw', '--zpool-warn', required=False, type=int, default=default_zpool_warning_percent, help='ZPool warning storage capacity free threshold. Give a percent value in the range 1-100, defaults to ' + str(default_zpool_warning_percent) + '%%. Used with zpool_capacity check.')    
+    parser.add_argument('-zc', '--zpool-critical', required=False, type=int, default=default_zool_critical_percent, help='ZPool critical storage capacity free threshold. Give a percent value in the range 1-100, defaults to ' + str(default_zool_critical_percent) +'%%. Used with zpool_capacity check.')
+    parser.add_argument('-zp', '--zpool-perfdata', required=False, action='store_true', help='Add Zpool capacity perf data to output. Used with zpool_capacity check.')    
     
     # if no arguments, print out help
     if len(sys.argv)==1:
