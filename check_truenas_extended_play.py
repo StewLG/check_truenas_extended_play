@@ -47,7 +47,7 @@ class ZpoolCapacity:
 
 class Startup(object):
 
-    def __init__(self, hostname, user, secret, use_ssl, verify_cert, ignore_dismissed_alerts, debug_logging, zpool_name):
+    def __init__(self, hostname, user, secret, use_ssl, verify_cert, ignore_dismissed_alerts, debug_logging, zpool_name, wfree, cfree):
         self._hostname = hostname
         self._user = user
         self._secret = secret
@@ -56,6 +56,8 @@ class Startup(object):
         self._ignore_dismissed_alerts = ignore_dismissed_alerts
         self._debug_logging = debug_logging
         self._zpool_name = zpool_name
+        self._wfree = wfree
+        self._cfree = cfree
  
         http_request_header = 'https' if use_ssl else 'http'
  
@@ -71,6 +73,8 @@ class Startup(object):
         logging.debug('verify_cert: %s', self._verify_cert)
         logging.debug('base_url: %s', self._base_url)
         logging.debug('zpool_name: %s', self._zpool_name)
+        logging.debug('wfree: %d', self._wfree)
+        logging.debug('cfree: %d', self._cfree)
         logging.debug('')
  
 
@@ -314,17 +318,6 @@ class Startup(object):
             print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
             sys.exit(0)
 
-
-# @dataclass
-# class ZpoolCapacity:
-#     ZpoolName: str
-#     ZpoolAvailableBytes: int      
-#     TotalUsedBytesForAllDatasets: int
-
-
-
-
-
     def check_zpool_capacity(self):
         # As far as I can tell, we unfortunately have to look at the datasets to get a usable
         # capacity value. There are numbers on a pool's output, but I can't make sense of them - 
@@ -341,6 +334,9 @@ class Startup(object):
 
         logging.debug('check_zpool_capacity')
 
+        warnZpoolCapacityPercent = self._wfree
+        critZpoolCapacityPercent = self._cfree
+
         datasetPayload = {
             'query-options': {
                 'extra': {
@@ -355,6 +351,7 @@ class Startup(object):
         crit=0
         critical_messages = ''
         warning_messages = ''
+        zpools_examined = ''
         root_level_datasets_examined = ''
         root_level_dataset_count = 0
         all_root_level_dataset_names = ''
@@ -403,18 +400,21 @@ class Startup(object):
 
                 # So now we have summary data on all the Zpools we care about. Go through each of them 
                 # and see if any are above warning/critical percentages.
+                for currentZpoolCapacity in zpoolNameToCapacityDict.values():
+                    zpoolTotalBytes = currentZpoolCapacity.ZpoolAvailableBytes + currentZpoolCapacity.TotalUsedBytesForAllDatasets
+                    usedPercentage = (currentZpoolCapacity.TotalUsedBytesForAllDatasets / zpoolTotalBytes ) * 100;
+                    usagePercentDisplayString = f'{usedPercentage:3.1f}'
+                    zpools_examined += currentZpoolCapacity.ZpoolName + ' (' + usagePercentDisplayString + '% used) '
+                    logging.debug('ZPool ' + str(currentZpoolCapacity.ZpoolName) + ' usedPercentage: ' + usagePercentDisplayString + '%')  
 
-# @dataclass
-# class ZpoolCapacity:
-#     ZpoolName: str
-#     ZpoolAvailableBytes: int      
-#     TotalUsedBytesForAllDatasets: int
- 
+                    
+                    if (usedPercentage >= critZpoolCapacityPercent):
+                        crit += 1
+                        critical_messages += "- Pool " + currentZpoolCapacity.ZpoolName + " usage " + usagePercentDisplayString + "% exceeds critical value of " + str(critZpoolCapacityPercent) + "%"                        
+                    elif (usedPercentage >= warnZpoolCapacityPercent):
+                        warn += 1
+                        warning_messages += "- Pool " + currentZpoolCapacity.ZpoolName + " usage " + usagePercentDisplayString + "% exceeds warning value of " + str(warnZpoolCapacityPercent) + "%"                         
 
-
-                    # if (pool_status != 'ONLINE'):
-                    #     crit = crit + 1
-                    #     critical_messages = critical_messages + '- (C) ZPool ' + pool_name + 'is ' + pool_status
         except:
             print ('UNKNOWN - check_zpool() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
             sys.exit(3)
@@ -436,8 +436,7 @@ class Startup(object):
             print ('WARNING ' + warning_messages)
             sys.exit(1)
         else:
-            #print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
-            print ('OK - No Zpool capacity issues. Root level datasets examined: ' + root_level_datasets_examined)
+            print ('OK - No Zpool capacity issues. ZPools examined: ' + zpools_examined + 'Root level datasets examined:' + root_level_datasets_examined)
             sys.exit(0)
 
 
@@ -481,6 +480,12 @@ def main():
     parser.add_argument('-nv', '--no-verify-cert', required=False, action='store_true', help='Do not verify the server SSL cert; default is to verify the SSL cert')
     parser.add_argument('-ig', '--ignore-dismissed-alerts', required=False, action='store_true', help='Ignore alerts that have already been dismissed in FreeNas/TrueNAS; default is to treat them as relevant')
     parser.add_argument('-d', '--debug', required=False, action='store_true', help='Display debugging information; run script this way and record result when asking for help.')
+    #parser.add_argument('-w', '--wfree', required=False, type=int, default=80, help='Warning storage capacity free threshold.')
+    #parser.add_argument('-c', '--cfree', required=False, type=int, default=90, help='Critical storage capacity free threshold.')
+    parser.add_argument('-w', '--wfree', required=False, type=int, default=10, help='Warning storage capacity free threshold.')    
+    parser.add_argument('-c', '--cfree', required=False, type=int, default=90, help='Critical storage capacity free threshold.')
+    
+
  
     # if no arguments, print out help
     if len(sys.argv)==1:
@@ -493,7 +498,7 @@ def main():
     use_ssl = not args.no_ssl
     verify_ssl_cert=not args.no_verify_cert
  
-    startup = Startup(args.hostname, args.user, args.passwd, use_ssl, verify_ssl_cert, args.ignore_dismissed_alerts, args.debug, args.zpoolname)
+    startup = Startup(args.hostname, args.user, args.passwd, use_ssl, verify_ssl_cert, args.ignore_dismissed_alerts, args.debug, args.zpoolname, args.wfree, args.cfree)
  
     startup.handle_requested_alert_type(args.type)
  
