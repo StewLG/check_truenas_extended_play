@@ -1,5 +1,5 @@
 # Check TrueNAS - Extended Play
-This is a TrueNAS/FreeNAS Nagios check script. Checks for Alerts, Pool health, Replication errors, TrueNAS software updates, etc.
+This is a TrueNAS/FreeNAS Nagios check script. Checks for Alerts, Pool health, Pool capacity, Replication errors, TrueNAS software updates, etc.
 
 This is an updated version of `check_truenas.py`, written by Goran Tornqvist, and originally found here:
 
