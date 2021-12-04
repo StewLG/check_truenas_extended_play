@@ -414,6 +414,7 @@ class Startup(object):
                 usedPercentage = (currentZpoolCapacity.TotalUsedBytesForAllDatasets / zpoolTotalBytes ) * 100;
                 usagePercentDisplayString = f'{usedPercentage:3.1f}'
                 zpools_examined += currentZpoolCapacity.ZpoolName + ' (' + usagePercentDisplayString + '% used) '
+                logging.debug('Warning capacity: ' + str(warnZpoolCapacityPercent) + '%' + ' Critical capacity: ' + str(critZpoolCapacityPercent) + '%')                 
                 logging.debug('ZPool ' + str(currentZpoolCapacity.ZpoolName) + ' usedPercentage: ' + usagePercentDisplayString + '%')  
                 
                 # Add warning/critical errors for the current ZPool summary being checked, if needed
@@ -427,16 +428,25 @@ class Startup(object):
                 # Add perfdata if user requested it
                 if (self._show_zpool_perfdata):
                     usedMegaBytes = currentZpoolCapacity.TotalUsedBytesForAllDatasets / BYTES_IN_MEGABYTE
+                    usedMegabytesString = f'{usedMegaBytes:3.2f}'                    
 
-                    warningBytes = currentZpoolCapacity.TotalUsedBytesForAllDatasets * (warnZpoolCapacityPercent / 100)
+                    warningBytes = zpoolTotalBytes * (warnZpoolCapacityPercent / 100)
                     warningMegabytes = warningBytes / BYTES_IN_MEGABYTE
+                    warningMegabytesString = f'{warningMegabytes:3.2f}'
 
-                    criticalBytes = currentZpoolCapacity.TotalUsedBytesForAllDatasets * (critZpoolCapacityPercent / 100)
+                    criticalBytes = zpoolTotalBytes * (critZpoolCapacityPercent / 100)
                     criticalMegabytes = criticalBytes / BYTES_IN_MEGABYTE
+                    criticalMegabytesString = f'{criticalMegabytes:3.2f}'
 
-                    totalMegabytes = currentZpoolCapacity.TotalUsedBytesForAllDatasets / BYTES_IN_MEGABYTE                    
+                    totalMegabytes = zpoolTotalBytes / BYTES_IN_MEGABYTE
+                    totalMegabytesString = f'{totalMegabytes:3.2f}' 
 
-                    perfdata += " " + currentZpoolCapacity.ZpoolName + "=" + str(usedMegaBytes) + "MB;" + str(warningMegabytes) + ";" + str(criticalMegabytes) + ";0;" + str(totalMegabytes)                                
+                    logging.debug('usedMegabytesString: ' + usedMegabytesString)  
+                    logging.debug('warningMegabytesString: ' + warningMegabytesString)  
+                    logging.debug('criticalMegabytesString: ' + criticalMegabytesString)                      
+                    logging.debug('totalMegabytesString: ' + totalMegabytesString)  
+
+                    perfdata += " " + currentZpoolCapacity.ZpoolName + "=" + usedMegabytesString + "MB;" + warningMegabytesString + ";" + criticalMegabytesString + ";0;" + totalMegabytesString                                
 
         except:
             print ('UNKNOWN - check_zpool() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
@@ -503,14 +513,10 @@ def main():
     parser.add_argument('-nv', '--no-verify-cert', required=False, action='store_true', help='Do not verify the server SSL cert; default is to verify the SSL cert')
     parser.add_argument('-ig', '--ignore-dismissed-alerts', required=False, action='store_true', help='Ignore alerts that have already been dismissed in FreeNas/TrueNAS; default is to treat them as relevant')
     parser.add_argument('-d', '--debug', required=False, action='store_true', help='Display debugging information; run script this way and record result when asking for help.')
-    #parser.add_argument('-w', '--wfree', required=False, type=int, default=80, help='Warning storage capacity free threshold.')
-    #parser.add_argument('-c', '--cfree', required=False, type=int, default=90, help='Critical storage capacity free threshold.')
-    parser.add_argument('-zw', '--zpool-warn', required=False, type=int, default=10, help='ZPool warning storage capacity free threshold.')    
+    parser.add_argument('-zw', '--zpool-warn', required=False, type=int, default=80, help='ZPool warning storage capacity free threshold.')    
     parser.add_argument('-zc', '--zpool-critical', required=False, type=int, default=90, help='ZPool critical storage capacity free threshold.')
     parser.add_argument('-zp', '--zpool-perfdata', required=False, action='store_true', help='Add Zpool capacity perf data to output. Used with zpool_capacity check')    
     
-
- 
     # if no arguments, print out help
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
