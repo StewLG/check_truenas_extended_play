@@ -123,14 +123,17 @@ OK - No Zpool capacity issues. ZPools examined: ApolloZpoolOne (75.8% used) Root
 check_truenas_extended_play.py -H apollo.yourdomain.local -u root -p RootPassy --type repl -nv
 OK - No replication errors. Replications examined:  ApolloDatasetReplications: FINISHED
 ```
-## Check for TrueNAS updates - no updates available
+
+## Check for TrueNAS updates
+
+#### Check for TrueNAS updates - no updates available
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local --type update -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M -nv
 OK - Update Status: UNAVAILABLE (no update available)
 ```
 'UNAVAILABLE' is the normal update status, and does not indicate a problem.
 
-## Check for TrueNAS updates - possible updates available
+#### Check for TrueNAS updates - possible updates available
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local --type update -p 1-weuiK4YY7OUduhpzKISIJJIDIJSJ4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M -nv
 WARNING - Update Status: AVAILABLE (an update is available). Update may be required. Go to TrueNAS Dashboard -> System -> Update to check for newer version.
