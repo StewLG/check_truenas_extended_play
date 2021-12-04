@@ -1,11 +1,11 @@
 # Check TrueNAS - Extended Play
-This is a TrueNAS/FreeNAS Nagios check script. Checks for Alerts, Pool health, Replication errors, etc.
+This is a TrueNAS/FreeNAS Nagios check script. Checks for Alerts, Pool health, Replication errors, TrueNAS software updates, etc.
 
 This is an updated version of `check_truenas.py`, written by Goran Tornqvist, and originally found here:
 
 https://exchange.nagios.org/directory/Plugins/Hardware/Storage-Systems/SAN-and-NAS/Check-TrueNAS-Health-2FReplication/details
 ```
-Checks a TrueNAS/FreeNAS server using the 2.0 API. Version 1.2
+Checks a TrueNAS/FreeNAS server using the 2.0 API. Version 1.3
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -14,7 +14,7 @@ optional arguments:
   -u USER, --user USER  Normally only root works
   -p PASSWD, --passwd PASSWD
                         Password for Username provided by --user, OR if --user is not supplied, --passwd must be an API key
-  -t TYPE, --type TYPE  Type of check, either alerts, zpool, or repl
+  -t TYPE, --type TYPE  Type of check, either alerts, zpool, repl, or update
   -pn ZPOOLNAME, --zpoolname ZPOOLNAME
                         For check type zpool, the name of zpool to check.
                         Optional; defaults to all zpools.
