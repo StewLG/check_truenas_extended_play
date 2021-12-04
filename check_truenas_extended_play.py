@@ -106,19 +106,31 @@ class Startup(object):
             
             # GET Request
             if (requestType is RequestTypeEnum.GET_REQUEST):
-                r = requests.get(request_url, 
-                                auth=auth,
-                                headers=headers,
-                                data=optionalPayloadAsJson,
-                                verify=self._verify_cert)
+                if (optionalPayload):
+                    r = requests.get(request_url, 
+                                    auth=auth,
+                                    headers=headers,
+                                    data=optionalPayloadAsJson,
+                                    verify=self._verify_cert)
+                else:
+                    r = requests.get(request_url, 
+                                    auth=auth,
+                                    headers=headers,
+                                    verify=self._verify_cert)                    
                 logging.debug('GET request response: %s', r.text)
             # POST Request                
             elif (requestType is RequestTypeEnum.POST_REQUEST):
-                r = requests.post(request_url, 
-                                auth=auth,
-                                headers=headers,
-                                data=optionalPayloadAsJson,
-                                verify=self._verify_cert)
+                if (optionalPayload):                
+                    r = requests.post(request_url, 
+                                    auth=auth,
+                                    headers=headers,
+                                    data=optionalPayloadAsJson,
+                                    verify=self._verify_cert)
+                else:
+                    r = requests.post(request_url, 
+                                    auth=auth,
+                                    headers=headers,
+                                    verify=self._verify_cert)
                 logging.debug('POST request response: %s', r.text)
             else:
                 print ('UNKNOWN - request failed - Unknown RequestType: ' + requestType)
