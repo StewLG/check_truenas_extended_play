@@ -67,11 +67,16 @@ class Startup(object):
  
 
     # Do a GET or POST request
-    def do_request(self, resource, requestType):
+    def do_request(self, resource, requestType, optionalPayload):
         try:
             request_url = '%s/%s/' % (self._base_url, resource)
             logging.debug('request_url: %s', request_url)
             logging.debug('requestType: ' + repr(requestType))
+            #logging.debug('optionalPayloadAsJson:' + optionalPayloadAsJson)
+
+            # We assume that all incoming payloads are JSON. 
+            optionalPayloadAsJson = json.dumps(optionalPayload)
+            logging.debug('optionalPayloadAsJson:' + optionalPayloadAsJson)
             
             # We get annoying warning text output from the urllib3 library if we fail to do this
             if (not self._verify_cert):
@@ -91,13 +96,15 @@ class Startup(object):
                 r = requests.get(request_url, 
                                 auth=auth,
                                 headers=headers,
+                                data=optionalPayloadAsJson,
                                 verify=self._verify_cert)
-                logging.debug('GET request response: %s', r.text)                
+                logging.debug('GET request response: %s', r.text)
             # POST Request                
             elif (requestType is RequestTypeEnum.POST_REQUEST):
                 r = requests.post(request_url, 
                                 auth=auth,
                                 headers=headers,
+                                data=optionalPayloadAsJson,
                                 verify=self._verify_cert)
                 logging.debug('POST request response: %s', r.text)
             else:
@@ -114,15 +121,23 @@ class Startup(object):
                 return r.json()
             except:
                 print ('UNKNOWN - json failed to parse - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
-                sys.exit(3)             
+                sys.exit(3)
 
     # GET request
     def get_request(self, resource):
-        return self.do_request(resource, RequestTypeEnum.GET_REQUEST)
+        return self.do_request(resource, RequestTypeEnum.GET_REQUEST, None)
+
+    # GET request with payload
+    def get_request_with_payload(self, resource, optionalPayload):
+        return self.do_request(resource, RequestTypeEnum.GET_REQUEST, optionalPayload)
 
     # POST request
     def post_request(self, resource):
-        return self.do_request(resource, RequestTypeEnum.POST_REQUEST)
+        return self.do_request(resource, RequestTypeEnum.POST_REQUEST, None)
+
+    # POST request with payload
+    def post_request_with_payload(self, resource, optionalPayload):
+        return self.do_request(resource, RequestTypeEnum.POST_REQUEST, optionalPayload)
 
     def check_repl(self):
         repls = self.get_request('replication')
@@ -235,7 +250,7 @@ class Startup(object):
     def check_zpool(self):
         pool_results = self.get_request('pool')
 
-        logging.debug('pool_results: %s', pool_results)
+        #logging.debug('pool_results: %s', pool_results)
         
         warn=0
         crit=0
@@ -290,6 +305,87 @@ class Startup(object):
             print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
             sys.exit(0)
  
+    def check_zpool_capacity(self):
+        # As far as I can tell, we unfortunately have to look at the datasets to get a usable
+        # capacity value. There are numbers on a pool's output, but I can't make sense of them - 
+        # when added up and made into percentages, they are very off (10-20%) for complex multiply
+        # vdev'd zpools. 
+
+        # Instead, this dataset call gives us a hierarchical view of datasets, rather than the default flattened view. This means
+        # we can just look at root-level datasets coming back from this request, and then add up their used 
+        # capacity for a given zpool. This total will be the real used total for the Zpool. Again, this is
+        # circuitous and complicated, and I am only doing it because I think it's the only way with the current
+        # API. If you know better, please let me know!
+        #
+        # -- SLG 12/03/2021
+
+        logging.debug('check_zpool_capacity')
+
+        datasetPayload = {
+            'query-options': {
+                'extra': {
+                    'flat': False
+                }
+            },
+             'query-filters': []   
+        }     
+        dataset_results = self.get_request_with_payload('pool/dataset', datasetPayload)
+
+        warn=0
+        crit=0
+        critial_messages = ''
+        warning_messages = ''
+        zpools_examined = ''
+        actual_zpool_count = 0
+        all_pool_names = ''
+        
+        looking_for_all_pools = self._zpool_name.lower() == 'all'
+        
+        try:
+            for pool in dataset_results:
+
+                actual_zpool_count += 1
+                pool_name = pool['name']
+                pool_status = pool['status']
+                
+                all_pool_names += pool_name + ' '
+                
+                logging.debug('Checking zpool for relevancy: %s with status %s', pool_name, pool_status)
+                
+                # Either match all pools, or only the requested pool
+                if (looking_for_all_pools or self._zpool_name == pool_name):
+                    logging.debug('Relevant Zpool found: %s with status %s', pool_name, pool_status)
+                    zpools_examined = zpools_examined + ' ' + pool_name
+                    logging.debug('zpools_examined: %s', zpools_examined)
+                    if (pool_status != 'ONLINE'):
+                        crit = crit + 1
+                        critial_messages = critial_messages + '- (C) ZPool ' + pool_name + 'is ' + pool_status
+        except:
+            print ('UNKNOWN - check_zpool() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
+            sys.exit(3)
+        
+        # There were no Zpools on the system, and we were looking for all of them
+        if (zpools_examined == '' and actual_zpool_count == 0 and looking_for_all_pools):
+            zpools_examined = '(None - No Zpools found)'
+            
+        # There were no Zpools matching a specific name on the system
+        if (zpools_examined == '' and actual_zpool_count > 0 and not looking_for_all_pools and crit == 0):
+            crit = crit + 1
+            critial_messages = '- No Zpools found matching {} out of {} pools ({})'.format(self._zpool_name, actual_zpool_count, all_pool_names)
+
+        if crit > 0:
+            # Show critical errors before any warnings
+            print ('CRITICAL ' + critial_messages + warning_messages)
+            sys.exit(2)
+        elif warn > 0:
+            print ('WARNING ' + warning_messages)
+            sys.exit(1)
+        else:
+            print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
+            sys.exit(0)
+
+
+
     def handle_requested_alert_type(self, alert_type):
         if alert_type == 'alerts':
             self.check_alerts()
@@ -299,6 +395,8 @@ class Startup(object):
             self.check_update()
         elif alert_type == 'zpool':
             self.check_zpool()
+        elif alert_type == 'zpool_capacity':
+            self.check_zpool_capacity()
         else:
             print ("Unknown type: " + alert_type)
             sys.exit(3)
@@ -321,7 +419,7 @@ def main():
     parser.add_argument('-H', '--hostname', required=True, type=str, help='Hostname or IP address')
     parser.add_argument('-u', '--user', required=False, type=str, help='Username, only root works, if not specified: use API Key')
     parser.add_argument('-p', '--passwd', required=True, type=str, help='Password or API Key')
-    parser.add_argument('-t', '--type', required=True, type=str, help='Type of check, either alerts, zpool, repl, or update')
+    parser.add_argument('-t', '--type', required=True, type=str, help='Type of check, either alerts, zpool, zpool_capacity, repl, or update')
     parser.add_argument('-pn', '--zpoolname', required=False, type=str, default='all', help='For check type zpool, the name of zpool to check. Optional; defaults to all zpools.')
     parser.add_argument('-ns', '--no-ssl', required=False, action='store_true', help='Disable SSL (use HTTP); default is to use SSL (use HTTPS)')
     parser.add_argument('-nv', '--no-verify-cert', required=False, action='store_true', help='Do not verify the server SSL cert; default is to verify the SSL cert')
