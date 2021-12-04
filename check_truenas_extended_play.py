@@ -335,28 +335,31 @@ class Startup(object):
         crit=0
         critial_messages = ''
         warning_messages = ''
-        zpools_examined = ''
-        actual_zpool_count = 0
-        all_pool_names = ''
+        root_level_datasets_examined = ''
+        root_level_dataset_count = 0
+        all_root_level_dataset_names = ''
         
+        # We allow filtering on pool name here as well
         looking_for_all_pools = self._zpool_name.lower() == 'all'
+
+        # Build a dict / array thingy and add to it as we proceed...
         
         try:
-            for pool in dataset_results:
+            for dataset in dataset_results:
 
-                actual_zpool_count += 1
-                pool_name = pool['name']
-                pool_status = pool['status']
+                root_level_dataset_count += 1
+                dataset_name = dataset['name']
+                dataset_pool_name = dataset['pool']
                 
-                all_pool_names += pool_name + ' '
+                all_root_level_dataset_names += dataset_name + ' '
                 
-                logging.debug('Checking zpool for relevancy: %s with status %s', pool_name, pool_status)
+                logging.debug('Checking root-level dataset for relevancy: %s from pool %s', dataset_name, dataset_pool_name)
                 
-                # Either match all pools, or only the requested pool
-                if (looking_for_all_pools or self._zpool_name == pool_name):
-                    logging.debug('Relevant Zpool found: %s with status %s', pool_name, pool_status)
-                    zpools_examined = zpools_examined + ' ' + pool_name
-                    logging.debug('zpools_examined: %s', zpools_examined)
+                # Either match all datasets, from any pool, or only datasets from the requested pool
+                if (looking_for_all_pools or self._zpool_name == dataset_pool_name):
+                    logging.debug('Relevant root-level dataset found: %s from pool %s', dataset_name, dataset_pool_name)
+                    root_level_datasets_examined = root_level_datasets_examined + ' ' + dataset_name
+                    logging.debug('root_level_datasets_examined: %s', root_level_datasets_examined)
                     if (pool_status != 'ONLINE'):
                         crit = crit + 1
                         critial_messages = critial_messages + '- (C) ZPool ' + pool_name + 'is ' + pool_status
@@ -364,14 +367,14 @@ class Startup(object):
             print ('UNKNOWN - check_zpool() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
             sys.exit(3)
         
-        # There were no Zpools on the system, and we were looking for all of them
-        if (zpools_examined == '' and actual_zpool_count == 0 and looking_for_all_pools):
-            zpools_examined = '(None - No Zpools found)'
+        # There were no datasets on the system, and we were looking for datasets from any pool
+        if (root_level_datasets_examined == '' and root_level_dataset_count == 0 and looking_for_all_pools):
+            root_level_datasets_examined = '(No Datasets found)'
             
-        # There were no Zpools matching a specific name on the system
-        if (zpools_examined == '' and actual_zpool_count > 0 and not looking_for_all_pools and crit == 0):
+        # There were no datasets matching the requested specific pool name on the system
+        if (root_level_datasets_examined == '' and root_level_dataset_count > 0 and not looking_for_all_pools and crit == 0):
             crit = crit + 1
-            critial_messages = '- No Zpools found matching {} out of {} pools ({})'.format(self._zpool_name, actual_zpool_count, all_pool_names)
+            critial_messages = '- No datasets found matching ZPool {} out of {} root level datasets ({})'.format(self._zpool_name, root_level_dataset_count, all_root_level_dataset_names)
 
         if crit > 0:
             # Show critical errors before any warnings
@@ -381,6 +384,7 @@ class Startup(object):
             print ('WARNING ' + warning_messages)
             sys.exit(1)
         else:
+            #print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
             print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
             sys.exit(0)
 
