@@ -47,7 +47,7 @@ class ZpoolCapacity:
 
 class Startup(object):
 
-    def __init__(self, hostname, user, secret, use_ssl, verify_cert, ignore_dismissed_alerts, debug_logging, zpool_name, wfree, cfree):
+    def __init__(self, hostname, user, secret, use_ssl, verify_cert, ignore_dismissed_alerts, debug_logging, zpool_name, wfree, cfree, show_zpool_perfdata):
         self._hostname = hostname
         self._user = user
         self._secret = secret
@@ -58,6 +58,7 @@ class Startup(object):
         self._zpool_name = zpool_name
         self._wfree = wfree
         self._cfree = cfree
+        self._show_zpool_perfdata = show_zpool_perfdata
  
         http_request_header = 'https' if use_ssl else 'http'
  
@@ -482,8 +483,9 @@ def main():
     parser.add_argument('-d', '--debug', required=False, action='store_true', help='Display debugging information; run script this way and record result when asking for help.')
     #parser.add_argument('-w', '--wfree', required=False, type=int, default=80, help='Warning storage capacity free threshold.')
     #parser.add_argument('-c', '--cfree', required=False, type=int, default=90, help='Critical storage capacity free threshold.')
-    parser.add_argument('-w', '--wfree', required=False, type=int, default=10, help='Warning storage capacity free threshold.')    
-    parser.add_argument('-c', '--cfree', required=False, type=int, default=90, help='Critical storage capacity free threshold.')
+    parser.add_argument('-zw', '--zpool-warn', required=False, type=int, default=10, help='ZPool warning storage capacity free threshold.')    
+    parser.add_argument('-zc', '--zpool-critical', required=False, type=int, default=90, help='ZPool critical storage capacity free threshold.')
+    parser.add_argument('-zp', '--zpool-perfdata', required=False, action='store_true', help='Add Zpool capacity perf data to output. Used with zpool_capacity check')    
     
 
  
@@ -496,9 +498,9 @@ def main():
     args = parser.parse_args(sys.argv[1:])
 
     use_ssl = not args.no_ssl
-    verify_ssl_cert=not args.no_verify_cert
+    verify_ssl_cert = not args.no_verify_cert
  
-    startup = Startup(args.hostname, args.user, args.passwd, use_ssl, verify_ssl_cert, args.ignore_dismissed_alerts, args.debug, args.zpoolname, args.wfree, args.cfree)
+    startup = Startup(args.hostname, args.user, args.passwd, use_ssl, verify_ssl_cert, args.ignore_dismissed_alerts, args.debug, args.zpoolname, args.wfree, args.cfree, args.zpool_perfdata)
  
     startup.handle_requested_alert_type(args.type)
  
