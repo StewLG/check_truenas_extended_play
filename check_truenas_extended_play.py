@@ -47,7 +47,7 @@ class ZpoolCapacity:
 
 class Startup(object):
 
-    def __init__(self, hostname, user, secret, use_ssl, verify_cert, ignore_dismissed_alerts, debug_logging, zpool_name, wfree, cfree, show_zpool_perfdata):
+    def __init__(self, hostname, user, secret, use_ssl, verify_cert, ignore_dismissed_alerts, debug_logging, zpool_name, zpool_warn, zpool_critical, show_zpool_perfdata):
         self._hostname = hostname
         self._user = user
         self._secret = secret
@@ -56,8 +56,8 @@ class Startup(object):
         self._ignore_dismissed_alerts = ignore_dismissed_alerts
         self._debug_logging = debug_logging
         self._zpool_name = zpool_name
-        self._wfree = wfree
-        self._cfree = cfree
+        self._wfree = zpool_warn
+        self._cfree = zpool_critical
         self._show_zpool_perfdata = show_zpool_perfdata
  
         http_request_header = 'https' if use_ssl else 'http'
@@ -319,6 +319,8 @@ class Startup(object):
             print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
             sys.exit(0)
 
+    
+
     def check_zpool_capacity(self):
         # As far as I can tell, we unfortunately have to look at the datasets to get a usable
         # capacity value. There are numbers on a pool's output, but I can't make sense of them - 
@@ -332,6 +334,9 @@ class Startup(object):
         # API. If you know better, please let me know!
         #
         # -- SLG 12/04/2021
+
+
+        BYTES_IN_MEGABYTE = 1024 * 1204;
 
         logging.debug('check_zpool_capacity')
 
@@ -356,6 +361,9 @@ class Startup(object):
         root_level_datasets_examined = ''
         root_level_dataset_count = 0
         all_root_level_dataset_names = ''
+        perfdata = ''
+        if (self._show_zpool_perfdata):
+            perfdata= ';|'
         
         # We allow filtering on pool name here
         looking_for_all_pools = self._zpool_name.lower() == 'all'
@@ -364,8 +372,8 @@ class Startup(object):
         zpoolNameToCapacityDict = {}
         
         try:
+            # Go through all the datasets, and sum up values for the zpools we are interested in
             for dataset in dataset_results:
-
                 root_level_dataset_count += 1
                 dataset_name = dataset['name']
                 dataset_pool_name = dataset['pool']
@@ -399,22 +407,36 @@ class Startup(object):
                     logging.debug('currentZpoolCapacity: ' + str(zpoolNameToCapacityDict[dataset_pool_name]))
 
 
-                # So now we have summary data on all the Zpools we care about. Go through each of them 
-                # and see if any are above warning/critical percentages.
-                for currentZpoolCapacity in zpoolNameToCapacityDict.values():
-                    zpoolTotalBytes = currentZpoolCapacity.ZpoolAvailableBytes + currentZpoolCapacity.TotalUsedBytesForAllDatasets
-                    usedPercentage = (currentZpoolCapacity.TotalUsedBytesForAllDatasets / zpoolTotalBytes ) * 100;
-                    usagePercentDisplayString = f'{usedPercentage:3.1f}'
-                    zpools_examined += currentZpoolCapacity.ZpoolName + ' (' + usagePercentDisplayString + '% used) '
-                    logging.debug('ZPool ' + str(currentZpoolCapacity.ZpoolName) + ' usedPercentage: ' + usagePercentDisplayString + '%')  
+            # So now we have summary data on all the Zpools we care about. Go through each of them 
+            # and see if any are above warning/critical percentages.
+            for currentZpoolCapacity in zpoolNameToCapacityDict.values():
+                zpoolTotalBytes = currentZpoolCapacity.ZpoolAvailableBytes + currentZpoolCapacity.TotalUsedBytesForAllDatasets
+                usedPercentage = (currentZpoolCapacity.TotalUsedBytesForAllDatasets / zpoolTotalBytes ) * 100;
+                usagePercentDisplayString = f'{usedPercentage:3.1f}'
+                zpools_examined += currentZpoolCapacity.ZpoolName + ' (' + usagePercentDisplayString + '% used) '
+                logging.debug('ZPool ' + str(currentZpoolCapacity.ZpoolName) + ' usedPercentage: ' + usagePercentDisplayString + '%')  
+                
+                # Add warning/critical errors for the current ZPool summary being checked, if needed
+                if (usedPercentage >= critZpoolCapacityPercent):
+                    crit += 1
+                    critical_messages += "- Pool " + currentZpoolCapacity.ZpoolName + " usage " + usagePercentDisplayString + "% exceeds critical value of " + str(critZpoolCapacityPercent) + "%"                        
+                elif (usedPercentage >= warnZpoolCapacityPercent):
+                    warn += 1
+                    warning_messages += "- Pool " + currentZpoolCapacity.ZpoolName + " usage " + usagePercentDisplayString + "% exceeds warning value of " + str(warnZpoolCapacityPercent) + "%"
 
-                    
-                    if (usedPercentage >= critZpoolCapacityPercent):
-                        crit += 1
-                        critical_messages += "- Pool " + currentZpoolCapacity.ZpoolName + " usage " + usagePercentDisplayString + "% exceeds critical value of " + str(critZpoolCapacityPercent) + "%"                        
-                    elif (usedPercentage >= warnZpoolCapacityPercent):
-                        warn += 1
-                        warning_messages += "- Pool " + currentZpoolCapacity.ZpoolName + " usage " + usagePercentDisplayString + "% exceeds warning value of " + str(warnZpoolCapacityPercent) + "%"                         
+                # Add perfdata if user requested it
+                if (self._show_zpool_perfdata):
+                    usedMegaBytes = currentZpoolCapacity.TotalUsedBytesForAllDatasets / BYTES_IN_MEGABYTE
+
+                    warningBytes = currentZpoolCapacity.TotalUsedBytesForAllDatasets * (warnZpoolCapacityPercent / 100)
+                    warningMegabytes = warningBytes / BYTES_IN_MEGABYTE
+
+                    criticalBytes = currentZpoolCapacity.TotalUsedBytesForAllDatasets * (critZpoolCapacityPercent / 100)
+                    criticalMegabytes = criticalBytes / BYTES_IN_MEGABYTE
+
+                    totalMegabytes = currentZpoolCapacity.TotalUsedBytesForAllDatasets / BYTES_IN_MEGABYTE                    
+
+                    perfdata += " " + currentZpoolCapacity.ZpoolName + "=" + str(usedMegaBytes) + "MB;" + str(warningMegabytes) + ";" + str(criticalMegabytes) + ";0;" + str(totalMegabytes)                                
 
         except:
             print ('UNKNOWN - check_zpool() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
@@ -431,13 +453,13 @@ class Startup(object):
 
         if crit > 0:
             # Show critical errors before any warnings
-            print ('CRITICAL ' + critical_messages + warning_messages)
+            print ('CRITICAL ' + critical_messages + warning_messages + perfdata)
             sys.exit(2)
         elif warn > 0:
-            print ('WARNING ' + warning_messages)
+            print ('WARNING ' + warning_messages + perfdata)
             sys.exit(1)
         else:
-            print ('OK - No Zpool capacity issues. ZPools examined: ' + zpools_examined + 'Root level datasets examined:' + root_level_datasets_examined)
+            print ('OK - No Zpool capacity issues. ZPools examined: ' + zpools_examined + 'Root level datasets examined:' + root_level_datasets_examined + perfdata)
             sys.exit(0)
 
 
@@ -500,7 +522,7 @@ def main():
     use_ssl = not args.no_ssl
     verify_ssl_cert = not args.no_verify_cert
  
-    startup = Startup(args.hostname, args.user, args.passwd, use_ssl, verify_ssl_cert, args.ignore_dismissed_alerts, args.debug, args.zpoolname, args.wfree, args.cfree, args.zpool_perfdata)
+    startup = Startup(args.hostname, args.user, args.passwd, use_ssl, verify_ssl_cert, args.ignore_dismissed_alerts, args.debug, args.zpoolname, args.zpool_warn, args.zpool_critical, args.zpool_perfdata)
  
     startup.handle_requested_alert_type(args.type)
  
