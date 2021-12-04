@@ -31,11 +31,19 @@ import string
 import urllib3
 import requests
 import logging
+from dataclasses import dataclass
 from enum import Enum
 
 class RequestTypeEnum(Enum):
     GET_REQUEST = 1
     POST_REQUEST = 2
+
+@dataclass
+class ZpoolCapacity:
+    ZpoolName: str
+    ZpoolAvailableBytes: int
+    TotalUsedBytesForAllDatasets: int
+  
 
 class Startup(object):
 
@@ -194,6 +202,7 @@ class Startup(object):
             logging.debug('Update check result: %s', updateCheckResult)
             
             updateCheckResultString = updateCheckResult['status']
+            # Despite that it sounds error-y, 'UNAVAILABLE' is actually the normal everything-is-ok state.
             needsUpdateOrOtherPossibleIssue = (updateCheckResultString != 'UNAVAILABLE')
 
         except:
@@ -219,7 +228,7 @@ class Startup(object):
         
         warn=0
         crit=0
-        critial_messages = ''
+        critical_messages = ''
         warning_messages = ''
         try:
             for alert in alerts:
@@ -228,7 +237,7 @@ class Startup(object):
                     continue
                 if alert['level'] == 'CRITICAL':
                     crit = crit + 1
-                    critial_messages = critial_messages + '- (C) ' + alert['formatted'].replace('\n', '. ') + ' '
+                    critical_messages = critical_messages + '- (C) ' + alert['formatted'].replace('\n', '. ') + ' '
                 elif alert['level'] == 'WARNING':
                     warn = warn + 1
                     warning_messages = warning_messages + '- (W) ' + alert['formatted'].replace('\n', '. ') + ' '
@@ -238,7 +247,7 @@ class Startup(object):
         
         if crit > 0:
             # Show critical errors before any warnings
-            print ('CRITICAL ' + critial_messages + warning_messages)
+            print ('CRITICAL ' + critical_messages + warning_messages)
             sys.exit(2)
         elif warn > 0:
             print ('WARNING ' + warning_messages)
@@ -254,7 +263,7 @@ class Startup(object):
         
         warn=0
         crit=0
-        critial_messages = ''
+        critical_messages = ''
         warning_messages = ''
         zpools_examined = ''
         actual_zpool_count = 0
@@ -280,7 +289,7 @@ class Startup(object):
                     logging.debug('zpools_examined: %s', zpools_examined)
                     if (pool_status != 'ONLINE'):
                         crit = crit + 1
-                        critial_messages = critial_messages + '- (C) ZPool ' + pool_name + 'is ' + pool_status
+                        critical_messages = critical_messages + '- (C) ZPool ' + pool_name + 'is ' + pool_status
         except:
             print ('UNKNOWN - check_zpool() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
             sys.exit(3)
@@ -292,11 +301,11 @@ class Startup(object):
         # There were no Zpools matching a specific name on the system
         if (zpools_examined == '' and actual_zpool_count > 0 and not looking_for_all_pools and crit == 0):
             crit = crit + 1
-            critial_messages = '- No Zpools found matching {} out of {} pools ({})'.format(self._zpool_name, actual_zpool_count, all_pool_names)
+            critical_messages = '- No Zpools found matching {} out of {} pools ({})'.format(self._zpool_name, actual_zpool_count, all_pool_names)
 
         if crit > 0:
             # Show critical errors before any warnings
-            print ('CRITICAL ' + critial_messages + warning_messages)
+            print ('CRITICAL ' + critical_messages + warning_messages)
             sys.exit(2)
         elif warn > 0:
             print ('WARNING ' + warning_messages)
@@ -304,12 +313,23 @@ class Startup(object):
         else:
             print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
             sys.exit(0)
- 
+
+
+# @dataclass
+# class ZpoolCapacity:
+#     ZpoolName: str
+#     ZpoolAvailableBytes: int      
+#     TotalUsedBytesForAllDatasets: int
+
+
+
+
+
     def check_zpool_capacity(self):
         # As far as I can tell, we unfortunately have to look at the datasets to get a usable
         # capacity value. There are numbers on a pool's output, but I can't make sense of them - 
         # when added up and made into percentages, they are very off (10-20%) for complex multiply
-        # vdev'd zpools. 
+        # vdev'd zpools, and don't agree with the TrueNAS GUI.
 
         # Instead, this dataset call gives us a hierarchical view of datasets, rather than the default flattened view. This means
         # we can just look at root-level datasets coming back from this request, and then add up their used 
@@ -317,7 +337,7 @@ class Startup(object):
         # circuitous and complicated, and I am only doing it because I think it's the only way with the current
         # API. If you know better, please let me know!
         #
-        # -- SLG 12/03/2021
+        # -- SLG 12/04/2021
 
         logging.debug('check_zpool_capacity')
 
@@ -333,16 +353,17 @@ class Startup(object):
 
         warn=0
         crit=0
-        critial_messages = ''
+        critical_messages = ''
         warning_messages = ''
         root_level_datasets_examined = ''
         root_level_dataset_count = 0
         all_root_level_dataset_names = ''
         
-        # We allow filtering on pool name here as well
+        # We allow filtering on pool name here
         looking_for_all_pools = self._zpool_name.lower() == 'all'
 
         # Build a dict / array thingy and add to it as we proceed...
+        zpoolNameToCapacityDict = {}
         
         try:
             for dataset in dataset_results:
@@ -353,16 +374,47 @@ class Startup(object):
                 
                 all_root_level_dataset_names += dataset_name + ' '
                 
-                logging.debug('Checking root-level dataset for relevancy: %s from pool %s', dataset_name, dataset_pool_name)
+                logging.debug('Checking root-level dataset for relevancy: dataset %s from pool %s', dataset_name, dataset_pool_name)
                 
                 # Either match all datasets, from any pool, or only datasets from the requested pool
                 if (looking_for_all_pools or self._zpool_name == dataset_pool_name):
-                    logging.debug('Relevant root-level dataset found: %s from pool %s', dataset_name, dataset_pool_name)
+                    logging.debug('Relevant root-level dataset found: dataset %s from pool %s', dataset_name, dataset_pool_name)
                     root_level_datasets_examined = root_level_datasets_examined + ' ' + dataset_name
                     logging.debug('root_level_datasets_examined: %s', root_level_datasets_examined)
-                    if (pool_status != 'ONLINE'):
-                        crit = crit + 1
-                        critial_messages = critial_messages + '- (C) ZPool ' + pool_name + 'is ' + pool_status
+
+                    dataset_used_bytes = dataset['used']['parsed']
+                    dataset_available_bytes = dataset['available']['parsed']
+
+                    logging.debug('dataset_used_bytes: %d', dataset_used_bytes)
+                    logging.debug('dataset_available_bytes: %d', dataset_available_bytes)
+
+                    # We haven't seen this Zpool before, starting new summary record about it
+                    if (not dataset_pool_name in zpoolNameToCapacityDict):
+                        # dataset_available_bytes is the same for any dataset in a zpool, so we can just use the first
+                        # one encountered. It will be the same value for all the relevant data sets, since they are all
+                        # in the same Zpool with the same amount of available space
+                        newZpoolCapacity = ZpoolCapacity(dataset_pool_name, dataset_available_bytes, dataset_used_bytes)
+                        zpoolNameToCapacityDict[dataset_pool_name] = newZpoolCapacity
+                    # Otherwise we've seen it before, update our count of used bytes
+                    else:
+                        zpoolNameToCapacityDict[dataset_pool_name].TotalUsedBytesForAllDatasets += dataset_used_bytes
+                    logging.debug('currentZpoolCapacity: ' + str(zpoolNameToCapacityDict[dataset_pool_name]))
+
+
+                # So now we have summary data on all the Zpools we care about. Go through each of them 
+                # and see if any are above warning/critical percentages.
+
+# @dataclass
+# class ZpoolCapacity:
+#     ZpoolName: str
+#     ZpoolAvailableBytes: int      
+#     TotalUsedBytesForAllDatasets: int
+ 
+
+
+                    # if (pool_status != 'ONLINE'):
+                    #     crit = crit + 1
+                    #     critical_messages = critical_messages + '- (C) ZPool ' + pool_name + 'is ' + pool_status
         except:
             print ('UNKNOWN - check_zpool() - Error when contacting TrueNAS server: ' + str(sys.exc_info()))
             sys.exit(3)
@@ -374,18 +426,18 @@ class Startup(object):
         # There were no datasets matching the requested specific pool name on the system
         if (root_level_datasets_examined == '' and root_level_dataset_count > 0 and not looking_for_all_pools and crit == 0):
             crit = crit + 1
-            critial_messages = '- No datasets found matching ZPool {} out of {} root level datasets ({})'.format(self._zpool_name, root_level_dataset_count, all_root_level_dataset_names)
+            critical_messages = '- No datasets found matching ZPool {} out of {} root level datasets ({})'.format(self._zpool_name, root_level_dataset_count, all_root_level_dataset_names)
 
         if crit > 0:
             # Show critical errors before any warnings
-            print ('CRITICAL ' + critial_messages + warning_messages)
+            print ('CRITICAL ' + critical_messages + warning_messages)
             sys.exit(2)
         elif warn > 0:
             print ('WARNING ' + warning_messages)
             sys.exit(1)
         else:
             #print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
-            print ('OK - No problem Zpools. Zpools examined: ' + zpools_examined)
+            print ('OK - No Zpool capacity issues. Root level datasets examined: ' + root_level_datasets_examined)
             sys.exit(0)
 
 
