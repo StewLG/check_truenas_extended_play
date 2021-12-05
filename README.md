@@ -151,7 +151,7 @@ Added API Key authentication. Thanks to Folke Ashberg.
 
 Added update check, by request of @madtempest.
 
-*December 5, 2021 - Version 1.4*
+*December 6, 2021 - Version 1.4*
 
 By popular demand, ZPool capacity checking added. Thanks to both Folke Ashberg and @Cosmits. Each made an independent pull request with a suggested implementation of this feature,  demonstrating it was sorely needed. It has been a bit involved to implement correctly, so if anyone sees free/used values for their ZPools that don't seem right, please let us know.
 
