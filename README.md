@@ -143,6 +143,14 @@ All update issues are merely warnings, and not critical errors.
 
 # Version History
 
+*June 18, 2020 - Version 1.0*
+
+Initial release. Script was not explicitly versioned - no version number displayed.
+
+*August 14, 2020 - Version 1.1*
+
+Replication check problems corrected. This check wasn't fully tested by author until this release.
+
 *December 3, 2021 - Version 1.2* 
 
 Added API Key authentication. Thanks to Folke Ashberg.
@@ -153,7 +161,7 @@ Added update check, by request of @madtempest.
 
 *December 6, 2021 - Version 1.4*
 
-By popular demand, ZPool capacity checking added. Thanks to both Folke Ashberg and @Cosmits. Each made an independent pull request with a suggested implementation of this feature,  demonstrating it was sorely needed. It has been a bit involved to implement correctly, so if anyone sees free/used values for their ZPools that don't seem right, please let us know.
+By popular demand, ZPool capacity checking added. Thanks to both Folke Ashberg (@fashberg) and @Cosmits. Each made an independent pull request with a suggested implementation of this feature,  demonstrating it was sorely needed. It has been a bit involved to implement correctly, so if anyone sees free/used values for their ZPools that don't seem right, please let us know.
 
 # Feedback Welcome
 If you have a suggestion or encounter a problem, I encourage users to get in touch. I've found half-baked Nagios plugins to be a chore to deal with, and I'd like this not to be one of them.
