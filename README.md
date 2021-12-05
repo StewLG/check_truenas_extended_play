@@ -163,7 +163,7 @@ Added update check, by request of @madtempest.
 
 ZPool capacity check added.
 
-Thanks to both Folke Ashberg (@fashberg) and @Cosmits. Each made an independent pull request with a suggested implementation of this feature, demonstrating a strong demand. It has been a bit involved to implement correctly, so if anyone sees free/used values for their ZPools that don't seem right, please let us know.
+Thanks to both Folke Ashberg (@fashberg) and @Cosmits. Each made an independent pull request with a suggested implementation of the zpool capacity check feature, demonstrating a strong demand. It has been a bit involved to implement correctly, so if anyone sees free/used values for their ZPools that don't seem right, please let us know.
 
 # Feedback Welcome
 If you have a suggestion or encounter a problem, I encourage users to get in touch. I've found half-baked Nagios plugins to be a chore to deal with, and I'd like this not to be one of them.
