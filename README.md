@@ -90,32 +90,32 @@ CRITICAL - No Zpools found matching PoolNameWhichIsNotActuallyThere out of 2 poo
 #### Check all zpools for capacity issues
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -t zpool_capacity -p 1-weuiK4YY7OUdukdiejsijeiYFe4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M -nv 
-OK - No Zpool capacity issues. ZPools examined: ApolloZpoolOne (75.8% used) ApolloZPoolEleven (64.0% used) Root level datasets examined: ApolloZpoolOne ApolloZPoolEleven
+OK - No Zpool capacity issues. ZPools examined: ApolloZpoolOne (75.8% used) - ApolloZPoolEleven (64.0% used) - Root level datasets examined: ApolloZpoolOne ApolloZPoolEleven
 ```
 Note that the default warning level (80%) and default critical level (90%) will be used here.
 
 #### Check specific zpool for capacity issues
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -t zpool_capacity -pn ApolloZpoolOne -p 1-weuiK4YY7OUdukdiejsijeiYFe4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M -nv 
-OK - No Zpool capacity issues. ZPools examined: ApolloZpoolOne (75.8% used) Root level datasets examined: ApolloZpoolOne
+OK - No Zpool capacity issues. ZPools examined: ApolloZpoolOne (75.8% used) - Root level datasets examined: ApolloZpoolOne
 ```
 
 #### Check all zpools with custom warning level
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -t zpool_capacity -zw 30 -p 1-weuiK4YY7OUdukdiejsijeiYFe4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M -nv 
-WARNING - Pool ApolloZpoolOne usage 75.8% exceeds warning value of 30%- Pool ApolloZPoolEleven usage 64.0% exceeds warning value of 30%
+WARNING - Pool ApolloZpoolOne usage 75.8% exceeds warning value of 30% - Pool ApolloZPoolEleven usage 64.0% exceeds warning value of 30%
 ```
 
 #### Check all zpools with custom error level
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -t zpool_capacity -zc 40 -p 1-weuiK4YY7OUdukdiejsijeiYFe4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M -nv 
-CRITICAL - Pool ApolloZpoolOne usage 75.8% exceeds warning value of 40%- Pool ApolloZPoolEleven usage 64.0% exceeds critical value of 40%
+CRITICAL - Pool ApolloZpoolOne usage 75.8% exceeds warning value of 40% - Pool ApolloZPoolEleven usage 64.0% exceeds critical value of 40%
 ```
 
 #### Check specific zpool for capacity issues, adding on perf data as well
 ```
 check_truenas_extended_play.py -H apollo.yourdomain.local -t zpool_capacity -pn ApolloZpoolOne -zp -p 1-weuiK4YY7OUdukdiejsijeiYFe4YgMwvea3dEhf3ITmoRRYZ3HBkDr2s1KZ1ft7M -nv 
-OK - No Zpool capacity issues. ZPools examined: ApolloZpoolOne (75.8% used) Root level datasets examined: ApolloZpoolOne| ApolloZpoolOne=294202.30MB;310479.52;155239.76;0;388099.40
+OK - No Zpool capacity issues. ZPools examined: ApolloZpoolOne (75.8% used) - Root level datasets examined: ApolloZpoolOne;| ApolloZpoolOne=294202.30MB;310479.52;155239.76;0;388099.40
 ```
 
 ## Check replication health

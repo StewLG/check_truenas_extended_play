@@ -369,7 +369,7 @@ class Startup(object):
         crit=0
         critical_messages = ''
         warning_messages = ''
-        zpools_examined = ''
+        zpools_examined_with_no_issues = ''
         root_level_datasets_examined = ''
         root_level_dataset_count = 0
         all_root_level_dataset_names = ''
@@ -425,17 +425,22 @@ class Startup(object):
                 zpoolTotalBytes = currentZpoolCapacity.ZpoolAvailableBytes + currentZpoolCapacity.TotalUsedBytesForAllDatasets
                 usedPercentage = (currentZpoolCapacity.TotalUsedBytesForAllDatasets / zpoolTotalBytes ) * 100;
                 usagePercentDisplayString = f'{usedPercentage:3.1f}'
-                zpools_examined += currentZpoolCapacity.ZpoolName + ' (' + usagePercentDisplayString + '% used) '
+                
                 logging.debug('Warning capacity: ' + str(warnZpoolCapacityPercent) + '%' + ' Critical capacity: ' + str(critZpoolCapacityPercent) + '%')                 
                 logging.debug('ZPool ' + str(currentZpoolCapacity.ZpoolName) + ' usedPercentage: ' + usagePercentDisplayString + '%')  
                 
                 # Add warning/critical errors for the current ZPool summary being checked, if needed
                 if (usedPercentage >= critZpoolCapacityPercent):
                     crit += 1
-                    critical_messages += "- Pool " + currentZpoolCapacity.ZpoolName + " usage " + usagePercentDisplayString + "% exceeds critical value of " + str(critZpoolCapacityPercent) + "%"                        
+                    critical_messages += " - Pool " + currentZpoolCapacity.ZpoolName + " usage " + usagePercentDisplayString + "% exceeds critical value of " + str(critZpoolCapacityPercent) + "%"                        
                 elif (usedPercentage >= warnZpoolCapacityPercent):
                     warn += 1
-                    warning_messages += "- Pool " + currentZpoolCapacity.ZpoolName + " usage " + usagePercentDisplayString + "% exceeds warning value of " + str(warnZpoolCapacityPercent) + "%"
+                    warning_messages += " - Pool " + currentZpoolCapacity.ZpoolName + " usage " + usagePercentDisplayString + "% exceeds warning value of " + str(warnZpoolCapacityPercent) + "%"
+                else:
+                    # Don't add dashes to start, only to additions
+                    if (len(zpools_examined_with_no_issues) > 0):
+                        zpools_examined_with_no_issues += ' - '
+                    zpools_examined_with_no_issues += currentZpoolCapacity.ZpoolName + ' (' + usagePercentDisplayString + '% used)'                    
 
                 # Add perfdata if user requested it
                 if (self._show_zpool_perfdata):
@@ -473,15 +478,22 @@ class Startup(object):
             crit = crit + 1
             critical_messages = '- No datasets found matching ZPool {} out of {} root level datasets ({})'.format(self._zpool_name, root_level_dataset_count, all_root_level_dataset_names)
 
+        # If we have zpools with no issues to show in a warning/error, we want a leading dash in front of it.
+        # Otherwise, no dash.
+        error_or_warning_dividing_dash = ''
+        if (len(zpools_examined_with_no_issues) > 0):
+            error_or_warning_dividing_dash = ' - '
+            logging.debug('Yes there is a dividing dash:' + error_or_warning_dividing_dash)
+
         if crit > 0:
             # Show critical errors before any warnings
-            print ('CRITICAL ' + critical_messages + warning_messages + perfdata)
+            print ('CRITICAL' + critical_messages + warning_messages + error_or_warning_dividing_dash + zpools_examined_with_no_issues + perfdata)
             sys.exit(2)
         elif warn > 0:
-            print ('WARNING ' + warning_messages + perfdata)
+            print ('WARNING' + warning_messages + error_or_warning_dividing_dash + zpools_examined_with_no_issues + perfdata)
             sys.exit(1)
         else:
-            print ('OK - No Zpool capacity issues. ZPools examined: ' + zpools_examined + 'Root level datasets examined:' + root_level_datasets_examined + perfdata)
+            print ('OK - No Zpool capacity issues. ZPools examined: ' + zpools_examined_with_no_issues + ' - Root level datasets examined:' + root_level_datasets_examined + perfdata)
             sys.exit(0)
 
 
