@@ -141,6 +141,10 @@ WARNING - Update Status: AVAILABLE (an update is available). Update may be requi
 
 All update issues are merely warnings, and not critical errors.
 
+As of 12/15/2021 there is an apparent issue with update checks when the ixsystems update servers are down, and the relevant API call crashes cryptically. I have filed a bug report with IX Systems:
+
+https://jira.ixsystems.com/browse/NAS-113833
+
 # Version History
 
 *June 18, 2020 - Version 1.0*
