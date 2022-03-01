@@ -36,6 +36,14 @@ optional arguments:
 # Requirements
 
 - Python 3.7 or greater
+   
+  If you get an error like:
+  
+      File "./check_truenas_extended_play.py", line 48
+        ZpoolName: str
+
+  Check to make sure you are running an up-to-date Python.
+
 - python3-urllib3
 - python3-requests
 
