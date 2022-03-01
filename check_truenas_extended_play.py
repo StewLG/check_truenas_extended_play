@@ -547,7 +547,7 @@ class Startup(object):
             #print('Should be setting no logging level at all')
             logger.setLevel(logging.CRITICAL)
 
-check_truenas_script_version = '1.4'
+check_truenas_script_version = '1.41'
 
 default_zpool_warning_percent = 80
 default_zool_critical_percent = 90
