@@ -23,10 +23,34 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import sys
+
+# Attempt to require minimum version of Python
+#
+# NOTE: This will NOT work much of the time, and instead you'll get a cryptic 
+# error because this script won't compile at all in earlier versions of Python.
+#
+# For example, several users are seeing this and not understanding it:
+#
+# curie# ./check_truenas_extended_play.py
+#  File "./check_truenas_extended_play.py", line 48
+#    ZpoolName: str
+#
+# This is dying because of the user of Dataclass in earlier versions of Python that
+# don't recognize it. Dataclass was introduced in Python 3.7.
+# 
+# So, this is both the least and most we can do without having wrappers or shell scripts
+# or batch files, none of which is going to make this script any easier to use.
+#
+# Sorry I can't do more without deliberately avoding language features!
+#
+# -- SLG 3/1/2022
+MIN_PYTHON = (3, 7)
+if sys.version_info < MIN_PYTHON:
+    sys.exit("Python %s.%s or later is required.\n" % MIN_PYTHON)
 
 import argparse
 import json
-import sys
 import string
 import urllib3
 import requests
@@ -523,7 +547,7 @@ class Startup(object):
             #print('Should be setting no logging level at all')
             logger.setLevel(logging.CRITICAL)
 
-check_truenas_script_version = '1.4'
+check_truenas_script_version = '1.41'
 
 default_zpool_warning_percent = 80
 default_zool_critical_percent = 90

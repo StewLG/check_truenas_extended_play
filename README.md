@@ -35,7 +35,8 @@ optional arguments:
 ```
 # Requirements
 
-- python3-urllib3  
+- Python 3.7 or greater
+- python3-urllib3
 - python3-requests
 
 # Usage Examples:
@@ -166,6 +167,10 @@ Added update check, by request of @madtempest.
 *December 6, 2021 - Version 1.4*
 
 ZPool capacity check added.
+
+*March 1, 2022 - Version 1.41*
+
+Adding well-intentioned but likely futile version check for Python 3.7 or greater. Clarifying in docs that Python 3.7 or greater is required.
 
 Thanks to both Folke Ashberg (@fashberg) and @Cosmits. Each made an independent pull request with a suggested implementation of the zpool capacity check feature, demonstrating a strong demand. It has been a bit involved to implement correctly, so if anyone sees free/used values for their ZPools that don't seem right, please let us know.
 
