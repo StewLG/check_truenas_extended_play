@@ -35,7 +35,8 @@ optional arguments:
 ```
 # Requirements
 
-- python3-urllib3  
+- Python 3.7 or greater
+- python3-urllib3
 - python3-requests
 
 # Usage Examples:
