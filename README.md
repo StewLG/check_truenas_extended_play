@@ -5,7 +5,7 @@ This is an updated version of `check_truenas.py`, written by Goran Tornqvist, an
 
 https://exchange.nagios.org/directory/Plugins/Hardware/Storage-Systems/SAN-and-NAS/Check-TrueNAS-Health-2FReplication/details
 ```
-Checks a TrueNAS/FreeNAS server using the 2.0 API. Version 1.4
+Checks a TrueNAS/FreeNAS server using the 2.0 API. Version 1.41
 
 optional arguments:
   -h, --help            show this help message and exit
