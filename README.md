@@ -182,5 +182,9 @@ Thanks to both Folke Ashberg (@fashberg) and @Cosmits. Each made an independent 
 
 Adding well-intentioned but likely futile version check for Python 3.7 or greater. Clarifying in docs that Python 3.7 or greater is required.
 
+*January 30, 2023 - Version 1.42*
+
+@juleslink found a typo in a hardcoded byte count - "1204" instead of "1024" as it should have been. This caused incorrect byte math in capacity checks. Apologies for not seeing this earlier, and for any disruption this causes to your checks or metrics tracking!
+
 # Feedback Welcome
 If you have a suggestion or encounter a problem, I encourage users to get in touch. I've found half-baked Nagios plugins to be a chore to deal with, and I'd like this not to be one of them.
