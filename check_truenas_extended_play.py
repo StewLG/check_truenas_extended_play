@@ -2,7 +2,7 @@
 
 # The MIT License (MIT)
 # Copyright (c) 2015 Goran Tornqvist
-# Extended by Stewart Loving-Gibbard 2020, 2021
+# Extended by Stewart Loving-Gibbard 2020, 2021, 2022, 2023
 # Additional help from Folke Ashberg 2021
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -372,7 +372,7 @@ class Startup(object):
         # -- SLG 12/04/2021
 
 
-        BYTES_IN_MEGABYTE = 1024 * 1204;
+        BYTES_IN_MEGABYTE = 1024 * 1024;
 
         logging.debug('check_zpool_capacity')
 
@@ -547,7 +547,7 @@ class Startup(object):
             #print('Should be setting no logging level at all')
             logger.setLevel(logging.CRITICAL)
 
-check_truenas_script_version = '1.41'
+check_truenas_script_version = '1.42'
 
 default_zpool_warning_percent = 80
 default_zool_critical_percent = 90
